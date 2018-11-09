@@ -1,0 +1,11 @@
+{
+	"main" : "fr.openent.lool.Lool",
+	"port" : 8333,
+	"app-name" : "Lool",
+	"app-address" : "/lool",
+	"app-icon" : "Lool-large",
+	"app-displayName" : "Lool",
+	"mode": "dev",
+	"entcore.port" : 8090,
+	"auto-redeploy": false
+}
