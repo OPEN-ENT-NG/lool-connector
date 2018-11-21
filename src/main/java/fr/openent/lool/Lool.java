@@ -11,6 +11,7 @@ import org.entcore.common.storage.StorageFactory;
 public class Lool extends BaseServer {
 
     public static WopiHelper wopiHelper;
+    public static String TOKEN_COLLECTION = "wopi_token";
 
 	@Override
 	public void start() throws Exception {

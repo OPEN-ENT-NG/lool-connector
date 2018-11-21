@@ -13,4 +13,14 @@ public interface DocumentService {
      * @param handler    Function handler returning data
      */
     void get(String documentId, Handler<Either<String, JsonObject>> handler);
+
+    /**
+     * Update file in workspace
+     *
+     * @param documentId document id to update
+     * @param newFileId  new file id
+     * @param metadata   new file metadata
+     * @param handler    Function handler returning data
+     */
+    void update(String documentId, String newFileId, JsonObject metadata, Handler<Either<String, JsonObject>> handler);
 }

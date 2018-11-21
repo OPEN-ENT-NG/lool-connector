@@ -1,8 +1,11 @@
 package fr.openent.lool.controller;
 
 import fr.openent.lool.Lool;
+import fr.openent.lool.bean.Token;
 import fr.openent.lool.service.DocumentService;
 import fr.openent.lool.service.Impl.DefaultDocumentService;
+import fr.openent.lool.service.Impl.DefaultTokenService;
+import fr.openent.lool.service.TokenService;
 import fr.wseduc.rs.ApiDoc;
 import fr.wseduc.rs.Get;
 import fr.wseduc.security.ActionType;
@@ -15,8 +18,8 @@ import org.entcore.common.user.UserUtils;
 
 public class LoolController extends ControllerHelper {
 
-    public static String userWopiToken;
     private DocumentService documentService;
+    private TokenService tokenService = new DefaultTokenService();
 
     public LoolController(EventBus eb) {
         super();
@@ -33,27 +36,32 @@ public class LoolController extends ControllerHelper {
                 return;
             }
 
-            String documentId = request.getParam("id");
-            userWopiToken = Lool.wopiHelper.generateLoolToken();
-            documentService.get(documentId, result -> {
-                if (result.isRight()) {
-                    redirectToLool(request, result.right().getValue());
+            Lool.wopiHelper.generateLoolToken(request, tokenEvent -> {
+                if (tokenEvent.isRight()) {
+                    Token token = tokenEvent.right().getValue();
+                    documentService.get(token.getDocument(), result -> {
+                        if (result.isRight()) {
+                            redirectToLool(request, token, result.right().getValue());
+                        } else {
+                            renderError(request);
+                        }
+                    });
                 } else {
-                    renderError(request);
+                    unauthorized(request);
                 }
             });
         });
     }
 
 
-    private void redirectToLool(HttpServerRequest request, JsonObject document) {
+    private void redirectToLool(HttpServerRequest request, Token token, JsonObject document) {
         // REDIRECT URL : https://rdoffice.arawa.fr/loleaflet/ffc419a/loleaflet.html?WOPISrc='.urlencode(redir()).'%2Fwopi%2F
         // discovery_url + "WOPISrc=" + ENT_URL + "/lool/" + document_id + "&title=" + docbument_title + "&lang=fr&closebutton=0&revisionhistory=1"
         String redirectURL = Lool.wopiHelper.getActionUrl() +
 //                "WOPISrc=" + Lool.wopiHelper.encodeWopiParam(getScheme(request) + "://nginx/lool/wopi/files/" + document.getString("_id")) +
                 "WOPISrc=" + Lool.wopiHelper.encodeWopiParam("https://nginx/lool/wopi/files/" + document.getString("_id")) +
                 "&title=" + Lool.wopiHelper.encodeWopiParam(document.getString("name")) +
-                "&access_token=" + userWopiToken +
+                "&access_token=" + token.getId() +
                 "&lang=fr" +
                 "&closebutton=0" +
                 "&revisionhistory=1";

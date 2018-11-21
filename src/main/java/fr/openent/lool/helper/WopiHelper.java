@@ -1,11 +1,18 @@
 package fr.openent.lool.helper;
 
+import fr.openent.lool.bean.Token;
+import fr.openent.lool.service.Impl.DefaultTokenService;
+import fr.openent.lool.service.TokenService;
+import fr.wseduc.webutils.Either;
 import io.vertx.core.Handler;
 import io.vertx.core.Vertx;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.core.buffer.impl.BufferImpl;
+import io.vertx.core.eventbus.EventBus;
 import io.vertx.core.http.HttpClient;
 import io.vertx.core.http.HttpClientRequest;
+import io.vertx.core.http.HttpServerRequest;
+import io.vertx.core.json.JsonObject;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
 import org.w3c.dom.Document;
@@ -21,7 +28,6 @@ import java.io.IOException;
 import java.io.StringReader;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.util.UUID;
 
 public class WopiHelper {
 
@@ -30,10 +36,13 @@ public class WopiHelper {
     private HttpHelper httpHelper;
     private HttpClient httpClient;
     private String actionUrl;
+    private EventBus eb;
+    private TokenService tokenService = new DefaultTokenService();
 
     public WopiHelper(Vertx vertx, String server) {
         try {
             this.httpHelper = new HttpHelper(vertx);
+            this.eb = vertx.eventBus();
             this.server = server;
             this.httpClient = httpHelper.generateHttpClient(new URI(server));
         } catch (URISyntaxException e) {
@@ -41,8 +50,8 @@ public class WopiHelper {
         }
     }
 
-    public String generateLoolToken() {
-        return UUID.randomUUID().toString();
+    public void generateLoolToken(HttpServerRequest request, Handler<Either<String, Token>> handler) {
+        new Token(eb, request, handler::handle);
     }
 
 
@@ -88,12 +97,27 @@ public class WopiHelper {
                 handler.handle(true);
             }
         } catch (ParserConfigurationException | SAXException | IOException e) {
-            e.printStackTrace();
+            log.error("An error occured while parsing discovery file", e);
             handler.handle(false);
         }
     }
 
     public String encodeWopiParam(String param) {
         return httpHelper.encode(param);
+    }
+
+    public void validateToken(String tokenId, String documentId, Handler<JsonObject> handler) {
+        tokenService.get(tokenId, documentId, tokenEvent -> {
+            if (tokenEvent.isRight()) {
+                if (tokenEvent.right().getValue().size() == 0) {
+                    handler.handle(new JsonObject().put("valid", false));
+                    return;
+                }
+                Token token = new Token(tokenEvent.right().getValue());
+                token.validate(valid -> handler.handle(new JsonObject().put("valid", valid).put("token", token.toJSON())));
+            } else {
+                handler.handle(new JsonObject().put("valid", false));
+            }
+        });
     }
 }
