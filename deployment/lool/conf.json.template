@@ -8,7 +8,7 @@
     	"app-icon" : "Lool-large",
         "host": "${host}",
         "ssl" : $ssl,
-        "lool-server": "https://localhost:9980",
+        "lool-server": "${loolServer}",
         "auto-redeploy": false,
         "userbook-host": "${host}",
         "integration-mode" : "HTTP",

@@ -58,8 +58,8 @@ public class LoolController extends ControllerHelper {
         // REDIRECT URL : https://rdoffice.arawa.fr/loleaflet/ffc419a/loleaflet.html?WOPISrc='.urlencode(redir()).'%2Fwopi%2F
         // discovery_url + "WOPISrc=" + ENT_URL + "/lool/" + document_id + "&title=" + docbument_title + "&lang=fr&closebutton=0&revisionhistory=1"
         String redirectURL = Lool.wopiHelper.getActionUrl() +
-//                "WOPISrc=" + Lool.wopiHelper.encodeWopiParam(getScheme(request) + "://nginx/lool/wopi/files/" + document.getString("_id")) +
-                "WOPISrc=" + Lool.wopiHelper.encodeWopiParam("https://nginx/lool/wopi/files/" + document.getString("_id")) +
+                "WOPISrc=" + Lool.wopiHelper.encodeWopiParam(getScheme(request) + "://" + getHost(request) + "/lool/wopi/files/" + document.getString("_id")) +
+//                "WOPISrc=" + Lool.wopiHelper.encodeWopiParam("https://nginx/lool/wopi/files/" + document.getString("_id")) +
                 "&title=" + Lool.wopiHelper.encodeWopiParam(document.getString("name")) +
                 "&access_token=" + token.getId() +
                 "&lang=fr" +
