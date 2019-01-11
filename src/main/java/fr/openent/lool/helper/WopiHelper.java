@@ -38,15 +38,15 @@ import java.util.List;
 
 public class WopiHelper {
 
-    private Logger log = LoggerFactory.getLogger(WopiHelper.class);
+    private final Logger log = LoggerFactory.getLogger(WopiHelper.class);
     private String server;
     private HttpHelper httpHelper;
     private HttpClient httpClient;
-    private String actionUrl;
     private EventBus eb;
-    private TokenService tokenService = new DefaultTokenService();
-    private String TOKEN_COLLECTION = "wopi_token";
-    private String DISCOVER_COLLECTION = "lool_discover";
+    private final TokenService tokenService = new DefaultTokenService();
+    private final String DISCOVER_COLLECTION = "lool_discover";
+
+    public static final String tokenCollection = "wopi_token";
 
     public WopiHelper(Vertx vertx, String server) {
         try {
@@ -103,7 +103,7 @@ public class WopiHelper {
     }
 
     /**
-     * Discover Libre Office Online format capabilites
+     * Discover Libre Office Online format capabilities
      *
      * @param handler Function handler returning data
      */
@@ -128,10 +128,6 @@ public class WopiHelper {
 
     public String getServer() {
         return server;
-    }
-
-    public String getTokenCollection() {
-        return TOKEN_COLLECTION;
     }
 
     /**
@@ -236,7 +232,7 @@ public class WopiHelper {
      *
      * @param handler Function handler returning data
      */
-    public void getCapabilites(Handler<Either<String, JsonArray>> handler) {
+    public void getCapabilities(Handler<Either<String, JsonArray>> handler) {
         JsonObject query = new JsonObject();
         JsonObject sort = new JsonObject();
         JsonObject keys = new JsonObject()

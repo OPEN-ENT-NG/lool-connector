@@ -18,7 +18,7 @@ import static org.entcore.common.http.response.DefaultResponseHandler.arrayRespo
 
 public class LoolController extends ControllerHelper {
 
-    private DocumentService documentService;
+    private final DocumentService documentService;
 
     public LoolController(EventBus eb) {
         super();
@@ -65,8 +65,8 @@ public class LoolController extends ControllerHelper {
             if (event.isRight()) {
                 String url = event.right().getValue();
                 String redirectURL = url +
-                        "WOPISrc=" + Lool.wopiHelper.encodeWopiParam(getScheme(request) + "://" + getHost(request) + "/lool/wopi/files/" + document.getString("_id")) +
-//                        "WOPISrc=" + Lool.wopiHelper.encodeWopiParam("https://nginx/lool/wopi/files/" + document.getString("_id")) +
+//                        "WOPISrc=" + Lool.wopiHelper.encodeWopiParam(getScheme(request) + "://" + getHost(request) + "/lool/wopi/files/" + document.getString("_id")) +
+                        "WOPISrc=" + Lool.wopiHelper.encodeWopiParam("https://nginx/lool/wopi/files/" + document.getString("_id")) +
                         "&title=" + Lool.wopiHelper.encodeWopiParam(document.getString("name")) +
                         "&access_token=" + token.getId() +
                         "&lang=fr" +
@@ -86,7 +86,7 @@ public class LoolController extends ControllerHelper {
     @ApiDoc("Get all Libre Office Online file capabilities")
     @SecuredAction(value = "", type = ActionType.AUTHENTICATED)
     public void getCapabilities(HttpServerRequest request) {
-        Lool.wopiHelper.getCapabilites(arrayResponseHandler(request));
+        Lool.wopiHelper.getCapabilities(arrayResponseHandler(request));
     }
 
     @Get("/discover")

@@ -9,8 +9,8 @@ import io.vertx.core.json.JsonObject;
 import static fr.wseduc.webutils.Utils.handlerToAsyncHandler;
 
 public class DefaultDocumentService implements DocumentService {
-    EventBus eb;
-    private String WORKSPACE_BUS_ADDRESS = "org.entcore.workspace";
+    private final EventBus eb;
+    private final String WORKSPACE_BUS_ADDRESS = "org.entcore.workspace";
 
     public DefaultDocumentService(EventBus eb) {
         this.eb = eb;

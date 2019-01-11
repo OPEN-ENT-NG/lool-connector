@@ -1,6 +1,6 @@
 package fr.openent.lool.bean;
 
-import fr.openent.lool.Lool;
+import fr.openent.lool.helper.WopiHelper;
 import fr.wseduc.mongodb.MongoDb;
 import fr.wseduc.webutils.Either;
 import fr.wseduc.webutils.request.CookieHelper;
@@ -13,10 +13,10 @@ import org.entcore.common.user.UserUtils;
 public class Token {
     private String _id;
     private String user;
-    private String document;
-    private String sessionId;
+    private final String document;
+    private final String sessionId;
     private String displayName;
-    private Long date;
+    private final Long date;
 
     public Token(EventBus eb, HttpServerRequest request, Handler<Either<String, Token>> handler) {
         this.document = request.getParam("id");
@@ -26,7 +26,7 @@ public class Token {
             if (user != null) {
                 this.user = user.getUserId();
                 this.displayName = user.getUsername();
-                MongoDb.getInstance().save(Lool.wopiHelper.getTokenCollection(), this.toJSON(), event -> {
+                MongoDb.getInstance().save(WopiHelper.tokenCollection, this.toJSON(), event -> {
                     JsonObject body = event.body();
                     if ("ok".equals(body.getString("status"))) {
                         this._id = body.getString("_id");
@@ -81,6 +81,6 @@ public class Token {
 
     public void validate(Handler<Boolean> handler) {
         handler.handle(true);
-        //TODO Réaliser l'implémentation de la fonction de validation
+        //TODO Implement validation function
     }
 }

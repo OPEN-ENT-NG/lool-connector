@@ -16,8 +16,8 @@ import org.entcore.common.storage.Storage;
 
 public class WopiController extends ControllerHelper {
 
-    private DocumentService documentService;
-    private FileService fileService;
+    private final DocumentService documentService;
+    private final FileService fileService;
 
     public WopiController(EventBus eb, Storage storage) {
         super();
@@ -39,7 +39,7 @@ public class WopiController extends ControllerHelper {
                 if (event.isRight()) {
                     JsonObject document = event.right().getValue();
                     JsonObject metadata = document.getJsonObject("metadata");
-                    //TODO Modifier les options et faire la récupération du numéro de version
+                    //TODO Update options and get version revision from document
                     JsonObject response = new JsonObject()
                             .put("BaseFileName", document.getString("name"))
                             .put("Size", metadata.getInteger("size"))

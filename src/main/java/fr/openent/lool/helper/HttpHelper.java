@@ -9,10 +9,10 @@ import java.net.URI;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 
-public class HttpHelper {
-    private Vertx vertx;
+class HttpHelper {
+    private final Vertx vertx;
 
-    public HttpHelper(Vertx vertx) {
+    HttpHelper(Vertx vertx) {
         this.vertx = vertx;
     }
 
@@ -22,10 +22,10 @@ public class HttpHelper {
      * @param uri URI used for Http client
      * @return Http client
      */
-    public HttpClient generateHttpClient(URI uri) {
+    HttpClient generateHttpClient(URI uri) {
         HttpClientOptions options = new HttpClientOptions()
                 .setDefaultHost(uri.getHost())
-                //FIXME Modifier le port par défaut
+                //FIXME FIx default port
                 .setDefaultPort("https".equals(uri.getScheme()) ? 9980 : 80)
                 //.setDefaultPort("https".equals(uri.getScheme()) ? 443 : 80)
                 .setVerifyHost(false)
@@ -42,7 +42,7 @@ public class HttpHelper {
      * @param param Parameter to encode
      * @return Parameter encoded as HTTP parameter
      */
-    public String encode(String param) {
+    String encode(String param) {
         try {
             return URLEncoder.encode(param, StandardCharsets.UTF_8.toString());
         } catch (UnsupportedEncodingException e) {

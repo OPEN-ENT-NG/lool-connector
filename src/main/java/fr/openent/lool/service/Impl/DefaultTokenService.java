@@ -1,7 +1,7 @@
 package fr.openent.lool.service.Impl;
 
 import com.mongodb.QueryBuilder;
-import fr.openent.lool.Lool;
+import fr.openent.lool.helper.WopiHelper;
 import fr.openent.lool.service.TokenService;
 import fr.wseduc.mongodb.MongoDb;
 import fr.wseduc.mongodb.MongoQueryBuilder;
@@ -18,8 +18,6 @@ public class DefaultTokenService implements TokenService {
                 QueryBuilder.start("_id").is(token).get(),
                 QueryBuilder.start("document").is(document).get()
         );
-        MongoDb.getInstance().findOne(Lool.wopiHelper.getTokenCollection(), MongoQueryBuilder.build(query), message -> {
-            handler.handle(Utils.validResult(message));
-        });
+        MongoDb.getInstance().findOne(WopiHelper.tokenCollection, MongoQueryBuilder.build(query), message -> handler.handle(Utils.validResult(message)));
     }
 }

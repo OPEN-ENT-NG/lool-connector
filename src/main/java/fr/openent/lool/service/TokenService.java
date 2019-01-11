@@ -11,7 +11,7 @@ public interface TokenService {
      *
      * @param token    Lool token identifier
      * @param document document identifier
-     * @param handler  Function handler returngin data
+     * @param handler  Function handler returning data
      */
     void get(String token, String document, Handler<Either<String, JsonObject>> handler);
 }
