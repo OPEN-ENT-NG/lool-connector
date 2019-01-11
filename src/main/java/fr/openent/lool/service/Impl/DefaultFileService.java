@@ -31,12 +31,12 @@ public class DefaultFileService implements FileService {
                 if ("ok".equals(entries.getString("status"))) {
                     handler.handle(new Either.Right<>(entries));
                 } else {
-                    handler.handle(new Either.Left<>("An error occured while writing file in the storage"));
+                    handler.handle(new Either.Left<>("[DefaultFileService@add] An error occured while writing file in the storage"));
                 }
             });
         });
         request.exceptionHandler(throwable -> {
-            handler.handle(new Either.Left<>("An error occurred when uploading file"));
+            handler.handle(new Either.Left<>("[DefaultFileService@add]An error occurred when uploading file"));
         });
     }
 

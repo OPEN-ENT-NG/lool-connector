@@ -16,6 +16,12 @@ public class HttpHelper {
         this.vertx = vertx;
     }
 
+    /**
+     * Generate Http client
+     *
+     * @param uri URI used for Http client
+     * @return Http client
+     */
     public HttpClient generateHttpClient(URI uri) {
         HttpClientOptions options = new HttpClientOptions()
                 .setDefaultHost(uri.getHost())
@@ -30,9 +36,15 @@ public class HttpHelper {
         return vertx.createHttpClient(options);
     }
 
-    public String encode(String url) {
+    /**
+     * Encode parameter as HTTP parameter
+     *
+     * @param param Parameter to encode
+     * @return Parameter encoded as HTTP parameter
+     */
+    public String encode(String param) {
         try {
-            return URLEncoder.encode(url, StandardCharsets.UTF_8.toString());
+            return URLEncoder.encode(param, StandardCharsets.UTF_8.toString());
         } catch (UnsupportedEncodingException e) {
             return "";
         }

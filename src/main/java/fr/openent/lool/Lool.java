@@ -11,7 +11,6 @@ import org.entcore.common.storage.StorageFactory;
 public class Lool extends BaseServer {
 
     public static WopiHelper wopiHelper;
-    public static String TOKEN_COLLECTION = "wopi_token";
 
 	@Override
 	public void start() throws Exception {
@@ -23,6 +22,6 @@ public class Lool extends BaseServer {
 
         addController(new LoolController(eb));
         addController(new WopiController(eb, storage));
-        vertx.setTimer(10000, aLong -> wopiHelper.discover(null));
+        vertx.setTimer(60000, aLong -> wopiHelper.discover(status -> log.info("Libre Office Online discover " + (status ? "OK" : "KO"))));
     }
 }

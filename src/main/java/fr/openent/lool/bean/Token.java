@@ -26,7 +26,7 @@ public class Token {
             if (user != null) {
                 this.user = user.getUserId();
                 this.displayName = user.getUsername();
-                MongoDb.getInstance().save(Lool.TOKEN_COLLECTION, this.toJSON(), event -> {
+                MongoDb.getInstance().save(Lool.wopiHelper.getTokenCollection(), this.toJSON(), event -> {
                     JsonObject body = event.body();
                     if ("ok".equals(body.getString("status"))) {
                         this._id = body.getString("_id");

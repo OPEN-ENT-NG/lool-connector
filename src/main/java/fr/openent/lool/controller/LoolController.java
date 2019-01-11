@@ -4,8 +4,6 @@ import fr.openent.lool.Lool;
 import fr.openent.lool.bean.Token;
 import fr.openent.lool.service.DocumentService;
 import fr.openent.lool.service.Impl.DefaultDocumentService;
-import fr.openent.lool.service.Impl.DefaultTokenService;
-import fr.openent.lool.service.TokenService;
 import fr.wseduc.rs.ApiDoc;
 import fr.wseduc.rs.Get;
 import fr.wseduc.security.ActionType;
@@ -19,7 +17,6 @@ import org.entcore.common.user.UserUtils;
 public class LoolController extends ControllerHelper {
 
     private DocumentService documentService;
-    private TokenService tokenService = new DefaultTokenService();
 
     public LoolController(EventBus eb) {
         super();
@@ -54,24 +51,37 @@ public class LoolController extends ControllerHelper {
     }
 
 
+    /**
+     * Redirect request to Libre Office Online.
+     *
+     * @param request  Client request used to redirect
+     * @param token    User Libre Office Online auth token
+     * @param document Document
+     */
     private void redirectToLool(HttpServerRequest request, Token token, JsonObject document) {
-        // REDIRECT URL : https://rdoffice.arawa.fr/loleaflet/ffc419a/loleaflet.html?WOPISrc='.urlencode(redir()).'%2Fwopi%2F
-        // discovery_url + "WOPISrc=" + ENT_URL + "/lool/" + document_id + "&title=" + docbument_title + "&lang=fr&closebutton=0&revisionhistory=1"
-        String redirectURL = Lool.wopiHelper.getActionUrl() +
-                "WOPISrc=" + Lool.wopiHelper.encodeWopiParam(getScheme(request) + "://" + getHost(request) + "/lool/wopi/files/" + document.getString("_id")) +
-//                "WOPISrc=" + Lool.wopiHelper.encodeWopiParam("https://nginx/lool/wopi/files/" + document.getString("_id")) +
-                "&title=" + Lool.wopiHelper.encodeWopiParam(document.getString("name")) +
-                "&access_token=" + token.getId() +
-                "&lang=fr" +
-                "&closebutton=0" +
-                "&revisionhistory=1";
-        request.response().setStatusCode(302);
-        request.response().putHeader("Location", redirectURL);
-        request.response().end();
+        Lool.wopiHelper.getActionUrl(document.getJsonObject("metadata").getString("content-type"), null, event -> {
+            if (event.isRight()) {
+                String url = event.right().getValue();
+                String redirectURL = url +
+                        "WOPISrc=" + Lool.wopiHelper.encodeWopiParam(getScheme(request) + "://" + getHost(request) + "/lool/wopi/files/" + document.getString("_id")) +
+//                        "WOPISrc=" + Lool.wopiHelper.encodeWopiParam("https://nginx/lool/wopi/files/" + document.getString("_id")) +
+                        "&title=" + Lool.wopiHelper.encodeWopiParam(document.getString("name")) +
+                        "&access_token=" + token.getId() +
+                        "&lang=fr" +
+                        "&closebutton=0" +
+                        "&revisionhistory=1";
+                request.response().setStatusCode(302);
+                request.response().putHeader("Location", redirectURL);
+                request.response().end();
+            } else {
+                log.error("[LoolController@redirectToLool] Failed to redirect to Libre Office Online for document " + document.getString("_id"));
+                badRequest(request);
+            }
+        });
     }
 
     @Get("/discover")
     public void discover(HttpServerRequest request) {
-        Lool.wopiHelper.discover(aBoolean -> request.response().end(Lool.wopiHelper.getActionUrl()));
+        Lool.wopiHelper.discover(aBoolean -> request.response().setStatusCode(201).end("201 Created"));
     }
 }

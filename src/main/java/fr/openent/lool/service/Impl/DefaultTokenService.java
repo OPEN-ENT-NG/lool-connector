@@ -18,7 +18,7 @@ public class DefaultTokenService implements TokenService {
                 QueryBuilder.start("_id").is(token).get(),
                 QueryBuilder.start("document").is(document).get()
         );
-        MongoDb.getInstance().findOne(Lool.TOKEN_COLLECTION, MongoQueryBuilder.build(query), message -> {
+        MongoDb.getInstance().findOne(Lool.wopiHelper.getTokenCollection(), MongoQueryBuilder.build(query), message -> {
             handler.handle(Utils.validResult(message));
         });
     }

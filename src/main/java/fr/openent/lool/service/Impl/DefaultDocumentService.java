@@ -24,7 +24,7 @@ public class DefaultDocumentService implements DocumentService {
         eb.send(WORKSPACE_BUS_ADDRESS, action, handlerToAsyncHandler(message -> {
             JsonObject body = message.body();
             if (!"ok".equals(body.getString("status"))) {
-                handler.handle(new Either.Left<>("An error occurred when calling document by event bus"));
+                handler.handle(new Either.Left<>("[DefaultDocumentService@get] An error occurred when calling document by event bus"));
             } else {
                 handler.handle(new Either.Right<>(message.body().getJsonObject("result")));
             }
@@ -43,7 +43,7 @@ public class DefaultDocumentService implements DocumentService {
 
         eb.send(WORKSPACE_BUS_ADDRESS, action, handlerToAsyncHandler(message -> {
             if (!"ok".equals(message.body().getString("status"))) {
-                handler.handle(new Either.Left<>("An error occurred when calling document by event bus"));
+                handler.handle(new Either.Left<>("[DefaultDocumentService@update]  An error occurred when calling document by event bus"));
             } else {
                 handler.handle(new Either.Right<>(message.body().getJsonObject("result")));
             }

@@ -9,7 +9,7 @@ public interface TokenService {
     /**
      * Get token based on token id and document id
      *
-     * @param token    Lool toke identifier
+     * @param token    Lool token identifier
      * @param document document identifier
      * @param handler  Function handler returngin data
      */
