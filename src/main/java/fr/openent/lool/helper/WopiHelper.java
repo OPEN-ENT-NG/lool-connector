@@ -16,6 +16,7 @@ import io.vertx.core.eventbus.Message;
 import io.vertx.core.http.HttpClient;
 import io.vertx.core.http.HttpClientRequest;
 import io.vertx.core.http.HttpServerRequest;
+import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
@@ -226,6 +227,27 @@ public class WopiHelper {
                 token.validate(valid -> handler.handle(new JsonObject().put("valid", valid).put("token", token.toJSON())));
             } else {
                 handler.handle(new JsonObject().put("valid", false));
+            }
+        });
+    }
+
+    /**
+     * Get Libre Office Online file capabilities
+     *
+     * @param handler Function handler returning data
+     */
+    public void getCapabilites(Handler<Either<String, JsonArray>> handler) {
+        JsonObject query = new JsonObject();
+        JsonObject sort = new JsonObject();
+        JsonObject keys = new JsonObject()
+                .put("content-type", 1)
+                .put("extension", 1)
+                .put("_id", 0);
+        MongoDb.getInstance().find(DISCOVER_COLLECTION, query, sort, keys, event -> {
+            if ("ok".equals(event.body().getString("status"))) {
+                handler.handle(new Either.Right<>(event.body().getJsonArray("results")));
+            } else {
+                handler.handle(new Either.Left<>(event.body().getString("message")));
             }
         });
     }

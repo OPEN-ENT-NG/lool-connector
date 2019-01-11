@@ -14,6 +14,8 @@ import io.vertx.core.json.JsonObject;
 import org.entcore.common.controller.ControllerHelper;
 import org.entcore.common.user.UserUtils;
 
+import static org.entcore.common.http.response.DefaultResponseHandler.arrayResponseHandler;
+
 public class LoolController extends ControllerHelper {
 
     private DocumentService documentService;
@@ -78,6 +80,13 @@ public class LoolController extends ControllerHelper {
                 badRequest(request);
             }
         });
+    }
+
+    @Get("/capabilities")
+    @ApiDoc("Get all Libre Office Online file capabilities")
+    @SecuredAction(value = "", type = ActionType.AUTHENTICATED)
+    public void getCapabilities(HttpServerRequest request) {
+        Lool.wopiHelper.getCapabilites(arrayResponseHandler(request));
     }
 
     @Get("/discover")
