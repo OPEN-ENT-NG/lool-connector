@@ -6,6 +6,7 @@ import fr.openent.lool.service.DocumentService;
 import fr.openent.lool.service.FileService;
 import fr.openent.lool.service.Impl.DefaultDocumentService;
 import fr.openent.lool.service.Impl.DefaultFileService;
+import fr.openent.lool.utils.Bindings;
 import fr.wseduc.rs.Get;
 import fr.wseduc.rs.Post;
 import io.vertx.core.eventbus.EventBus;
@@ -29,13 +30,13 @@ public class WopiController extends ControllerHelper {
     public void checkFileInfo(HttpServerRequest request) {
         String loolToken = request.params().get("access_token");
         String documentId = request.params().get("id");
-        Lool.wopiHelper.validateToken(loolToken, documentId, validationObject -> {
+        Lool.wopiHelper.validateToken(loolToken, documentId, Bindings.READ.toString(), validationObject -> {
             if (!validationObject.getBoolean("valid")) {
                 unauthorized(request);
                 return;
             }
             Token token = new Token(validationObject.getJsonObject("token"));
-            documentService.get(request.getParam("id"), event -> {
+            Lool.wopiHelper.userCanWrite(token.getSessionId(), token.getDocument(), canWrite -> documentService.get(request.getParam("id"), event -> {
                 if (event.isRight()) {
                     JsonObject document = event.right().getValue();
                     JsonObject metadata = document.getJsonObject("metadata");
@@ -52,14 +53,14 @@ public class WopiController extends ControllerHelper {
                             .put("DisableExport", false)
                             .put("HideExportOption", false)
                             .put("HideSaveOption", false)
-                            .put("HidePrintOption", Lool.wopiHelper.getServer())
-                            .put("UserCanWrite", true);
+                            .put("HidePrintOption", false)
+                            .put("UserCanWrite", canWrite);
 
                     renderJson(request, response);
                 } else {
                     badRequest(request);
                 }
-            });
+            }));
         });
     }
 
@@ -84,7 +85,7 @@ public class WopiController extends ControllerHelper {
     @Post("/wopi/files/:id/contents")
     public void putFile(HttpServerRequest request) {
         request.pause();
-        Lool.wopiHelper.validateToken(request.params().get("access_token"), request.params().get("id"), validation -> {
+        Lool.wopiHelper.validateToken(request.params().get("access_token"), request.params().get("id"), Bindings.CONTRIB.toString(), validation -> {
             if (!validation.getBoolean("valid")) {
                 unauthorized(request);
                 return;

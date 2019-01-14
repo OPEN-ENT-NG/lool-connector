@@ -1,9 +1,13 @@
 package fr.openent.lool.helper;
 
+import com.mongodb.DBObject;
+import com.mongodb.QueryBuilder;
 import fr.openent.lool.bean.Token;
 import fr.openent.lool.service.Impl.DefaultTokenService;
 import fr.openent.lool.service.TokenService;
+import fr.openent.lool.utils.Bindings;
 import fr.wseduc.mongodb.MongoDb;
+import fr.wseduc.mongodb.MongoQueryBuilder;
 import fr.wseduc.webutils.Either;
 import io.vertx.core.CompositeFuture;
 import io.vertx.core.Future;
@@ -20,6 +24,7 @@ import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
+import org.entcore.common.user.UserUtils;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
@@ -210,20 +215,84 @@ public class WopiHelper {
      *
      * @param tokenId    Token identifier
      * @param documentId Document identifier
+     * @param right      Right the user need. It should be a String from Binding enum.
      * @param handler    Function handler returning data
      */
-    public void validateToken(String tokenId, String documentId, Handler<JsonObject> handler) {
+    public void validateToken(String tokenId, String documentId, String right, Handler<JsonObject> handler) {
         tokenService.get(tokenId, documentId, tokenEvent -> {
             if (tokenEvent.isRight()) {
                 if (tokenEvent.right().getValue().size() == 0) {
-                    handler.handle(new JsonObject().put("valid", false));
+                    handler.handle(new JsonObject().put("valid", false).put("err", tokenEvent.left().getValue()));
                     return;
                 }
                 Token token = new Token(tokenEvent.right().getValue());
-                token.validate(valid -> handler.handle(new JsonObject().put("valid", valid).put("token", token.toJSON())));
+                UserUtils.getSession(eb, token.getSessionId(), session -> {
+                    if (session == null || !token.getUser().equals(session.getString("userId"))) {
+                        handler.handle(new JsonObject().put("valid", false).put("err", session == null ? "Session not found" : "Invalid user"));
+                        return;
+                    }
+                    userCan(token.getSessionId(), documentId, right, can -> handler.handle(new JsonObject().put("valid", can).put("token", tokenEvent.right().getValue())));
+                });
             } else {
                 handler.handle(new JsonObject().put("valid", false));
             }
+        });
+    }
+
+    /**
+     * Check if the user can read file based on given session identifier and given document identifier
+     *
+     * @param sessionId  Session identifier
+     * @param documentId Document identifier
+     * @param handler    Function handler returning data
+     */
+    public void userCanRead(String sessionId, String documentId, Handler<Boolean> handler) {
+        userCan(sessionId, documentId, Bindings.READ.toString(), handler);
+    }
+
+    /**
+     * Check if the user can write file based on given session identifier and given document identifier
+     *
+     * @param sessionId  Session identifier
+     * @param documentId Document identifier
+     * @param handler    Function handler returning data
+     */
+    public void userCanWrite(String sessionId, String documentId, Handler<Boolean> handler) {
+        userCan(sessionId, documentId, Bindings.CONTRIB.toString(), handler);
+    }
+
+    /**
+     * Check if the user can use the file. Verification is based on given session identifier, given document identifier and given right.
+     *
+     * @param sessionId  Session identifier
+     * @param documentId Document identifier
+     * @param right      Right needed
+     * @param handler    Function handler returning data
+     */
+    private void userCan(String sessionId, String documentId, String right, Handler<Boolean> handler) {
+        UserUtils.getSession(eb, sessionId, session -> {
+            if (session == null) {
+                handler.handle(false);
+                return;
+            }
+
+            List<DBObject> groups = new ArrayList<>();
+            groups.add(QueryBuilder.start("userId").is(session.getString("userId"))
+                    .put(right).is(true).get());
+            JsonArray groupsIds = session.getJsonArray("groupsIds");
+            for (int i = 0; i < groupsIds.size(); i++) {
+                String gpId = groupsIds.getString(i);
+                groups.add(QueryBuilder.start("groupId").is(gpId)
+                        .put(right).is(true).get());
+            }
+            QueryBuilder query = QueryBuilder.start("_id").is(documentId).or(
+                    QueryBuilder.start("owner").is(session.getString("userId")).get(),
+                    QueryBuilder.start("shared").elemMatch(
+                            new QueryBuilder().or(groups.toArray(new DBObject[groups.size()])).get()).get()
+            );
+
+            MongoDb.getInstance().count("documents", MongoQueryBuilder.build(query),
+                    res -> handler.handle(res.body() != null && "ok".equals(res.body().getString("status")) && 1 == res.body().getInteger("count")));
         });
     }
 

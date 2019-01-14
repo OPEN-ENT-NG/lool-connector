@@ -79,8 +79,7 @@ public class Token {
         return this._id;
     }
 
-    public void validate(Handler<Boolean> handler) {
-        handler.handle(true);
-        //TODO Implement validation function
+    public String getSessionId() {
+        return sessionId;
     }
 }
