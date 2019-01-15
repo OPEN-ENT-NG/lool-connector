@@ -22,6 +22,7 @@ public class Lool extends BaseServer {
 
         addController(new LoolController(eb));
         addController(new WopiController(eb, storage));
-        vertx.setTimer(60000, aLong -> wopiHelper.discover(status -> log.info("Libre Office Online discover " + (status ? "OK" : "KO"))));
+        vertx.setTimer(30000, aLong -> wopiHelper.discover(status -> log.info("Libre Office Online discover " + (status ? "OK" : "KO"))));
+        vertx.setTimer(30000, timer -> wopiHelper.clearTokens(status -> log.info("Libre Office Online clear token " + (status.isRight() ? "OK" : "KO"))));
     }
 }

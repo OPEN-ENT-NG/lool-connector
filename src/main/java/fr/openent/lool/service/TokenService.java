@@ -14,4 +14,11 @@ public interface TokenService {
      * @param handler  Function handler returning data
      */
     void get(String token, String document, Handler<Either<String, JsonObject>> handler);
+
+    /**
+     * Clear token collection
+     *
+     * @param handler Function handler returning data
+     */
+    void clear(Handler<Either<String, JsonObject>> handler);
 }

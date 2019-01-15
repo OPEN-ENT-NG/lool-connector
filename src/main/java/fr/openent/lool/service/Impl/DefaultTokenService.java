@@ -20,4 +20,9 @@ public class DefaultTokenService implements TokenService {
         );
         MongoDb.getInstance().findOne(WopiHelper.tokenCollection, MongoQueryBuilder.build(query), message -> handler.handle(Utils.validResult(message)));
     }
+
+    @Override
+    public void clear(Handler<Either<String, JsonObject>> handler) {
+        MongoDb.getInstance().delete(WopiHelper.tokenCollection, new JsonObject(), message -> handler.handle(Utils.validResult(message)));
+    }
 }

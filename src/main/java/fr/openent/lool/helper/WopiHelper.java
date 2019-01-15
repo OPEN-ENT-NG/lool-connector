@@ -316,4 +316,13 @@ public class WopiHelper {
             }
         });
     }
+
+    /**
+     * Clear all Lool tokens
+     *
+     * @param handler Function handler returning data
+     */
+    public void clearTokens(Handler<Either<String, JsonObject>> handler) {
+        tokenService.clear(handler);
+    }
 }
