@@ -52,7 +52,11 @@ public class WopiController extends ControllerHelper {
                             .put("DisablePrint", false)
                             .put("DisableExport", false)
                             .put("HideExportOption", false)
+                            .put("DisableInactiveMessages", false)
+                            .put("HideUserList", false)
                             .put("HideSaveOption", false)
+                            .put("EnableShare", true)
+                            .put("EnableInsertRemoteImage", true)
                             .put("HidePrintOption", false)
                             .put("UserCanWrite", canWrite);
 
