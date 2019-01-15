@@ -3,12 +3,11 @@ package fr.openent.lool.helper;
 import com.mongodb.DBObject;
 import com.mongodb.QueryBuilder;
 import fr.openent.lool.bean.Token;
-import fr.openent.lool.service.Impl.DefaultTokenService;
-import fr.openent.lool.service.TokenService;
 import fr.openent.lool.utils.Bindings;
 import fr.wseduc.mongodb.MongoDb;
 import fr.wseduc.mongodb.MongoQueryBuilder;
 import fr.wseduc.webutils.Either;
+import fr.wseduc.webutils.Utils;
 import io.vertx.core.CompositeFuture;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
@@ -48,10 +47,9 @@ public class WopiHelper {
     private HttpHelper httpHelper;
     private HttpClient httpClient;
     private EventBus eb;
-    private final TokenService tokenService = new DefaultTokenService();
     private final String DISCOVER_COLLECTION = "lool_discover";
 
-    public static final String tokenCollection = "wopi_token";
+    public static final String TOKEN_COLLECTION = "wopi_token";
 
     public WopiHelper(Vertx vertx, String server) {
         try {
@@ -71,7 +69,22 @@ public class WopiHelper {
      * @param handler Function handler returning data
      */
     public void generateLoolToken(HttpServerRequest request, Handler<Either<String, Token>> handler) {
-        new Token(eb, request, handler);
+        new Token(eb, request, event -> {
+            if (event.isRight()) {
+                Token token = event.right().getValue();
+                MongoDb.getInstance().save(WopiHelper.TOKEN_COLLECTION, token.toJSON(), saveEvent -> {
+                    JsonObject body = saveEvent.body();
+                    if ("ok".equals(body.getString("status"))) {
+                        handler.handle(new Either.Right<>(token));
+                    } else {
+                        handler.handle(new Either.Left<>(body.getString("message")));
+                    }
+                });
+            } else {
+                log.error("[WopiHelper@generateLoolToken] Failed to create token", event.left().getValue());
+            }
+
+        });
     }
 
 
@@ -219,10 +232,15 @@ public class WopiHelper {
      * @param handler    Function handler returning data
      */
     public void validateToken(String tokenId, String documentId, String right, Handler<JsonObject> handler) {
-        tokenService.get(tokenId, documentId, tokenEvent -> {
+        QueryBuilder query = new QueryBuilder().and(
+                QueryBuilder.start("_id").is(tokenId).get(),
+                QueryBuilder.start("document").is(documentId).get()
+        );
+        MongoDb.getInstance().findOne(TOKEN_COLLECTION, MongoQueryBuilder.build(query), message -> {
+            Either<String, JsonObject> tokenEvent = Utils.validResult(message);
             if (tokenEvent.isRight()) {
                 if (tokenEvent.right().getValue().size() == 0) {
-                    handler.handle(new JsonObject().put("valid", false).put("err", tokenEvent.left().getValue()));
+                    handler.handle(new JsonObject().put("valid", false).put("err", "No token found"));
                     return;
                 }
                 Token token = new Token(tokenEvent.right().getValue());
@@ -323,6 +341,6 @@ public class WopiHelper {
      * @param handler Function handler returning data
      */
     public void clearTokens(Handler<Either<String, JsonObject>> handler) {
-        tokenService.clear(handler);
+        MongoDb.getInstance().delete(WopiHelper.TOKEN_COLLECTION, new JsonObject(), message -> handler.handle(Utils.validResult(message)));
     }
 }

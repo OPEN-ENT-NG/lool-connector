@@ -1,7 +1,5 @@
 package fr.openent.lool.bean;
 
-import fr.openent.lool.helper.WopiHelper;
-import fr.wseduc.mongodb.MongoDb;
 import fr.wseduc.webutils.Either;
 import fr.wseduc.webutils.request.CookieHelper;
 import io.vertx.core.Handler;
@@ -9,6 +7,8 @@ import io.vertx.core.eventbus.EventBus;
 import io.vertx.core.http.HttpServerRequest;
 import io.vertx.core.json.JsonObject;
 import org.entcore.common.user.UserUtils;
+
+import java.util.UUID;
 
 public class Token {
     private String _id;
@@ -22,21 +22,14 @@ public class Token {
         this.document = request.getParam("id");
         this.date = System.currentTimeMillis();
         this.sessionId = CookieHelper.getInstance().getSigned("oneSessionId", request);
+        this._id = UUID.randomUUID().toString();
         UserUtils.getUserInfos(eb, request, user -> {
             if (user != null) {
                 this.user = user.getUserId();
                 this.displayName = user.getUsername();
-                MongoDb.getInstance().save(WopiHelper.tokenCollection, this.toJSON(), event -> {
-                    JsonObject body = event.body();
-                    if ("ok".equals(body.getString("status"))) {
-                        this._id = body.getString("_id");
-                        handler.handle(new Either.Right<>(this));
-                    } else {
-                        handler.handle(new Either.Left<>(body.getString("message")));
-                    }
-                });
+                handler.handle(new Either.Right<>(this));
             } else {
-                handler.handle(new Either.Left<>("User not found"));
+                handler.handle(new Either.Left<>("[Token@contructor] User not found"));
             }
         });
     }
