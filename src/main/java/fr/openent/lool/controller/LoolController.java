@@ -65,8 +65,8 @@ public class LoolController extends ControllerHelper {
             if (event.isRight()) {
                 String url = event.right().getValue();
                 String redirectURL = url +
-//                        "WOPISrc=" + Lool.wopiHelper.encodeWopiParam(getScheme(request) + "://" + getHost(request) + "/lool/wopi/files/" + document.getString("_id")) +
-                        "WOPISrc=" + Lool.wopiHelper.encodeWopiParam("https://nginx/lool/wopi/files/" + document.getString("_id")) +
+                        "WOPISrc=" + Lool.wopiHelper.encodeWopiParam(getScheme(request) + "://" + getHost(request) + "/lool/wopi/files/" + document.getString("_id")) +
+//                        "WOPISrc=" + Lool.wopiHelper.encodeWopiParam("https://nginx/lool/wopi/files/" + document.getString("_id")) +
                         "&title=" + Lool.wopiHelper.encodeWopiParam(document.getString("name")) +
                         "&access_token=" + token.getId() +
                         "&lang=fr" +
