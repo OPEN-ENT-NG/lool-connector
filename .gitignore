@@ -8,3 +8,7 @@
 .jshintrc
 .idea
 Lool.iml
+src/main/resources/view
+src/main/resources/public/dist
+src/main/resources/public/js
+rev-manifest.json

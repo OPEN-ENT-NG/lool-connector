@@ -8,6 +8,8 @@ import fr.wseduc.rs.ApiDoc;
 import fr.wseduc.rs.Get;
 import fr.wseduc.security.ActionType;
 import fr.wseduc.security.SecuredAction;
+import fr.wseduc.webutils.Either;
+import io.vertx.core.Handler;
 import io.vertx.core.eventbus.EventBus;
 import io.vertx.core.http.HttpServerRequest;
 import io.vertx.core.json.JsonObject;
@@ -28,20 +30,27 @@ public class LoolController extends ControllerHelper {
 
     @Get("/documents/:id/open")
     @ApiDoc("Open document in Libre Office Online")
-    @SecuredAction(value = "", type = ActionType.AUTHENTICATED)
+    @SecuredAction("lool.open.file")
     public void open(HttpServerRequest request) {
         UserUtils.getUserInfos(eb, request, user -> {
             if (user == null) {
                 unauthorized(request);
                 return;
             }
-
             Lool.wopiHelper.generateLoolToken(request, tokenEvent -> {
                 if (tokenEvent.isRight()) {
                     Token token = tokenEvent.right().getValue();
                     documentService.get(token.getDocument(), result -> {
                         if (result.isRight()) {
-                            redirectToLool(request, token, result.right().getValue());
+                            getRedirectionUrl(token, result.right().getValue(), event -> {
+                                if (event.isRight()) {
+                                    JsonObject params = new JsonObject()
+                                            .put("lool-redirection", event.right().getValue());
+                                    renderView(request, params, "lool.html", null);
+                                } else {
+                                    renderError(request);
+                                }
+                            });
                         } else {
                             renderError(request);
                         }
@@ -55,30 +64,29 @@ public class LoolController extends ControllerHelper {
 
 
     /**
-     * Redirect request to Libre Office Online.
+     * Get redirection url for Libre Office Online document
      *
-     * @param request  Client request used to redirect
      * @param token    User Libre Office Online auth token
      * @param document Document
+     * @param handler Function handler returning data
      */
-    private void redirectToLool(HttpServerRequest request, Token token, JsonObject document) {
+    private void getRedirectionUrl(Token token, JsonObject document, Handler<Either<String, String>> handler) {
         Lool.wopiHelper.getActionUrl(document.getJsonObject("metadata").getString("content-type"), null, event -> {
             if (event.isRight()) {
                 String url = event.right().getValue();
                 String redirectURL = url +
-                        "WOPISrc=" + Lool.wopiHelper.encodeWopiParam(getScheme(request) + "://" + getHost(request) + "/lool/wopi/files/" + document.getString("_id")) +
-//                        "WOPISrc=" + Lool.wopiHelper.encodeWopiParam("https://nginx/lool/wopi/files/" + document.getString("_id")) +
+//                        "WOPISrc=" + Lool.wopiHelper.encodeWopiParam(getScheme(request) + "://" + getHost(request) + "/lool/wopi/files/" + document.getString("_id")) +
+                        "WOPISrc=" + Lool.wopiHelper.encodeWopiParam("https://nginx/lool/wopi/files/" + document.getString("_id")) +
                         "&title=" + Lool.wopiHelper.encodeWopiParam(document.getString("name")) +
                         "&access_token=" + token.getId() +
                         "&lang=fr" +
                         "&closebutton=0" +
                         "&revisionhistory=1";
-                request.response().setStatusCode(302);
-                request.response().putHeader("Location", redirectURL);
-                request.response().end();
+                handler.handle(new Either.Right<>(redirectURL));
             } else {
-                log.error("[LoolController@redirectToLool] Failed to redirect to Libre Office Online for document " + document.getString("_id"));
-                badRequest(request);
+                String message = "[LoolController@redirectToLool] Failed to redirect to Libre Office Online for document " + document.getString("_id");
+                log.error(message);
+                handler.handle(new Either.Left<>(message));
             }
         });
     }

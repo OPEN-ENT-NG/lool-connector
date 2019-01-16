@@ -22,8 +22,14 @@ clean () {
   docker-compose run --rm -u "$USER_UID:$GROUP_GID" gradle gradle clean
 }
 
-runLool () {
-  docker-compose up -d lool
+buildNode () {
+  case `uname -s` in
+    MINGW*)
+      docker-compose run --rm -u "$USER_UID:$GROUP_GID" node sh -c "npm install --no-bin-links && node_modules/gulp/bin/gulp.js build"
+      ;;
+    *)
+      docker-compose run --rm -u "$USER_UID:$GROUP_GID" node sh -c "npm install && node_modules/gulp/bin/gulp.js build"
+  esac
 }
 
 buildGradle () {
@@ -47,14 +53,14 @@ do
     clean)
       clean
       ;;
-    runLool)
-      runLool
+    buildNode)
+      buildNode
       ;;
     buildGradle)
       buildGradle
       ;;
     install)
-      buildGradle
+      buildNode && buildGradle
       ;;
     publish)
       publish
@@ -66,4 +72,3 @@ do
     exit 1
   fi
 done
-

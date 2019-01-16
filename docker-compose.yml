@@ -5,11 +5,12 @@ gradle:
     - ./:/home/gradle/project
     - ~/.m2:/home/gradle/.m2
     - ~/.gradle:/home/gradle/.gradle
-lool:
-  image: collabora/code
-  container_name: lool
-  environment:
-    username: admin
-    password: admin
-  ports:
-  - "9980:9980"
+node:
+  image: opendigitaleducation/node
+  working_dir: /home/node/app
+  volumes:
+  - ./:/home/node/app
+  - ~/.npm:/.npm
+  - ~/.npmrc:/home/node/.npmrc
+  - ~/.bowerrc:/home/node/.bowerrc
+  - ~/.gitconfig:/home/node/.gitconfig
