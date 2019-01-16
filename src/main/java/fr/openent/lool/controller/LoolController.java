@@ -12,6 +12,7 @@ import io.vertx.core.eventbus.EventBus;
 import io.vertx.core.http.HttpServerRequest;
 import io.vertx.core.json.JsonObject;
 import org.entcore.common.controller.ControllerHelper;
+import org.entcore.common.storage.Storage;
 import org.entcore.common.user.UserUtils;
 
 import static org.entcore.common.http.response.DefaultResponseHandler.arrayResponseHandler;
@@ -20,9 +21,9 @@ public class LoolController extends ControllerHelper {
 
     private final DocumentService documentService;
 
-    public LoolController(EventBus eb) {
+    public LoolController(EventBus eb, Storage storage) {
         super();
-        documentService = new DefaultDocumentService(eb);
+        documentService = new DefaultDocumentService(eb, storage);
     }
 
     @Get("/documents/:id/open")
@@ -65,8 +66,8 @@ public class LoolController extends ControllerHelper {
             if (event.isRight()) {
                 String url = event.right().getValue();
                 String redirectURL = url +
-//                        "WOPISrc=" + Lool.wopiHelper.encodeWopiParam(getScheme(request) + "://" + getHost(request) + "/lool/wopi/files/" + document.getString("_id")) +
-                        "WOPISrc=" + Lool.wopiHelper.encodeWopiParam("https://nginx/lool/wopi/files/" + document.getString("_id")) +
+                        "WOPISrc=" + Lool.wopiHelper.encodeWopiParam(getScheme(request) + "://" + getHost(request) + "/lool/wopi/files/" + document.getString("_id")) +
+//                        "WOPISrc=" + Lool.wopiHelper.encodeWopiParam("https://nginx/lool/wopi/files/" + document.getString("_id")) +
                         "&title=" + Lool.wopiHelper.encodeWopiParam(document.getString("name")) +
                         "&access_token=" + token.getId() +
                         "&lang=fr" +

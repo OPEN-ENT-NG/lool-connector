@@ -23,4 +23,13 @@ public interface DocumentService {
      * @param handler    Function handler returning data
      */
     void update(String documentId, String newFileId, JsonObject metadata, Handler<Either<String, JsonObject>> handler);
+
+    /**
+     * Update document revision identifier. It does not create new revision
+     *
+     * @param documentId Document identifier
+     * @param newFileId  New file identifier
+     * @param handler    Function handler returning data
+     */
+    void updateRevisionId(String documentId, String newFileId, Handler<Either<String, JsonObject>> handler);
 }

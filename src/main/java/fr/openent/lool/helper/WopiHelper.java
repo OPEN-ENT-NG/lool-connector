@@ -15,7 +15,6 @@ import io.vertx.core.Vertx;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.core.buffer.impl.BufferImpl;
 import io.vertx.core.eventbus.EventBus;
-import io.vertx.core.eventbus.Message;
 import io.vertx.core.http.HttpClient;
 import io.vertx.core.http.HttpClientRequest;
 import io.vertx.core.http.HttpServerRequest;
@@ -167,7 +166,7 @@ public class WopiHelper {
 
             Future<JsonObject> deleteFuture = Future.future();
             futures.add(deleteFuture);
-            MongoDb.getInstance().delete(DISCOVER_COLLECTION, new JsonObject(), getDiscoverHandler(deleteFuture));
+            MongoDb.getInstance().delete(DISCOVER_COLLECTION, new JsonObject(), FutureHelper.getFutureHandler(deleteFuture));
 
             for (int i = 0; i < actions.getLength(); i++) {
                 Element app = (Element) actions.item(i);
@@ -185,7 +184,7 @@ public class WopiHelper {
 
                 Future<JsonObject> future = Future.future();
                 futures.add(future);
-                MongoDb.getInstance().save(DISCOVER_COLLECTION, actionObject, getDiscoverHandler(future));
+                MongoDb.getInstance().save(DISCOVER_COLLECTION, actionObject, FutureHelper.getFutureHandler(future));
             }
 
             CompositeFuture.all(futures).setHandler(event -> handler.handle(event.succeeded()));
@@ -195,23 +194,6 @@ public class WopiHelper {
             handler.handle(false);
         }
     }
-
-    /**
-     * Returns discover handler. It used to manage future callback
-     *
-     * @param future Future
-     * @return Message handler
-     */
-    private Handler<Message<JsonObject>> getDiscoverHandler(Future<JsonObject> future) {
-        return event -> {
-            if ("ok".equals(event.body().getString("status"))) {
-                future.complete(event.body());
-            } else {
-                future.fail(event.body().getString("message"));
-            }
-        };
-    }
-
 
     /**
      * Encode string parameter as HTTP param using HttpHelper

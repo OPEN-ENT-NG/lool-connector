@@ -9,6 +9,8 @@ import fr.openent.lool.service.Impl.DefaultFileService;
 import fr.openent.lool.utils.Bindings;
 import fr.wseduc.rs.Get;
 import fr.wseduc.rs.Post;
+import fr.wseduc.webutils.Either;
+import io.vertx.core.Handler;
 import io.vertx.core.eventbus.EventBus;
 import io.vertx.core.http.HttpServerRequest;
 import io.vertx.core.json.JsonObject;
@@ -22,7 +24,7 @@ public class WopiController extends ControllerHelper {
 
     public WopiController(EventBus eb, Storage storage) {
         super();
-        documentService = new DefaultDocumentService(eb);
+        documentService = new DefaultDocumentService(eb, storage);
         fileService = new DefaultFileService(storage);
     }
 
@@ -58,6 +60,7 @@ public class WopiController extends ControllerHelper {
                             .put("EnableShare", true)
                             .put("EnableInsertRemoteImage", true)
                             .put("HidePrintOption", false)
+                            .put("UserCanNotWriteRelative", false)
                             .put("UserCanWrite", canWrite);
 
                     renderJson(request, response);
@@ -89,6 +92,7 @@ public class WopiController extends ControllerHelper {
     @Post("/wopi/files/:id/contents")
     public void putFile(HttpServerRequest request) {
         request.pause();
+        boolean isAutoSave = Boolean.parseBoolean(request.getHeader("X-LOOL-WOPI-IsAutosave"));
         Lool.wopiHelper.validateToken(request.params().get("access_token"), request.params().get("id"), Bindings.CONTRIB.toString(), validation -> {
             if (!validation.getBoolean("valid")) {
                 unauthorized(request);
@@ -107,13 +111,19 @@ public class WopiController extends ControllerHelper {
                             return;
                         }
                         JsonObject storageBody = storageEvent.right().getValue();
-                        documentService.update(request.getParam("id"), storageBody.getString("_id"), storageBody.getJsonObject("metadata"), updateEvent -> {
+                        Handler<Either<String, JsonObject>> updateHandler = updateEvent -> {
                             if (updateEvent.isRight()) {
                                 request.response().setStatusCode(200).end();
                             } else {
                                 renderError(request);
                             }
-                        });
+                        };
+
+                        if (isAutoSave) {
+                            documentService.updateRevisionId(request.getParam("id"), storageBody.getString("_id"), updateHandler);
+                        } else {
+                            documentService.update(request.getParam("id"), storageBody.getString("_id"), storageBody.getJsonObject("metadata"), updateHandler);
+                        }
                     });
                 } else {
                     renderError(request);
