@@ -8,12 +8,19 @@
             id="context"></script>
     <script src="/lool/public/dist/application.js" type="text/javascript"></script>
     <script type="text/ng-template" id="empty"></script>
+    <script>
+        var documentId = "{{document-id}}";
+    </script>
 </head>
 
 <body ng-controller="MainController" style="height: 100%; width: 100%">
-<iframe class="adapter" src="{{lool-redirection}}"
+<iframe id="adapter" class="adapter" src="{{lool-redirection}}"
         style="z-index:500; position: absolute;height: calc(100% - 64px);width:100%; top: 64px;"></iframe>
 <portal>
+    <lightbox on-close="display.lightbox = false;"
+              show="display.lightbox">
+        <container template="lightbox"></container>
+    </lightbox>
 </portal>
 </body>
 

@@ -1,0 +1,41 @@
+<div class="reduce-block-eight">
+    <h2>
+        <i18n>workspace.versions.list</i18n>
+    </h2>
+    <table class="list-view">
+        <thead>
+        <tr>
+            <th scope="col"></th>
+            <th scope="col">
+                <span translate content="name"></span>
+            </th>
+            <th scope="col">
+                <span translate content="user"></span>
+            </th>
+            <th scope="col">
+                <span translate content="modified"></span>
+            </th>
+            <th scope="col">
+                <span translate content="size"></span>
+            </th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr ng-repeat="revision in revisions | orderBy:'date.$date':true">
+            <td></td>
+            <td>
+                <a ng-href="document/[[documentId]]/revision/[[revision._id]]">[[revision.name]]</a>
+            </td>
+            <td>
+                <a ng-href="/userbook/annuaire#[[revision.userId]]">[[revision.userName]]</a>
+            </td>
+            <td>
+                [[revision.date.$date]]
+            </td>
+            <td>
+                [[revision.metadata.size]]
+            </td>
+        </tr>
+        </tbody>
+    </table>
+</div>

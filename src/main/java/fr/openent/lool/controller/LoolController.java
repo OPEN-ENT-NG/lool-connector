@@ -3,7 +3,9 @@ package fr.openent.lool.controller;
 import fr.openent.lool.Lool;
 import fr.openent.lool.bean.Token;
 import fr.openent.lool.service.DocumentService;
+import fr.openent.lool.service.FileService;
 import fr.openent.lool.service.Impl.DefaultDocumentService;
+import fr.openent.lool.service.Impl.DefaultFileService;
 import fr.wseduc.rs.ApiDoc;
 import fr.wseduc.rs.Get;
 import fr.wseduc.security.ActionType;
@@ -22,10 +24,12 @@ import static org.entcore.common.http.response.DefaultResponseHandler.arrayRespo
 public class LoolController extends ControllerHelper {
 
     private final DocumentService documentService;
+    private final FileService fileService;
 
     public LoolController(EventBus eb, Storage storage) {
         super();
         documentService = new DefaultDocumentService(eb, storage);
+        fileService = new DefaultFileService(storage);
     }
 
     @Get("/documents/:id/open")
@@ -42,10 +46,11 @@ public class LoolController extends ControllerHelper {
                     Token token = tokenEvent.right().getValue();
                     documentService.get(token.getDocument(), result -> {
                         if (result.isRight()) {
-                            getRedirectionUrl(token, result.right().getValue(), event -> {
+                            getRedirectionUrl(request, token, result.right().getValue(), event -> {
                                 if (event.isRight()) {
                                     JsonObject params = new JsonObject()
-                                            .put("lool-redirection", event.right().getValue());
+                                            .put("lool-redirection", event.right().getValue())
+                                            .put("document-id", token.getDocument());
                                     renderView(request, params, "lool.html", null);
                                 } else {
                                     renderError(request);
@@ -66,17 +71,18 @@ public class LoolController extends ControllerHelper {
     /**
      * Get redirection url for Libre Office Online document
      *
+     * @param request Server request
      * @param token    User Libre Office Online auth token
      * @param document Document
      * @param handler Function handler returning data
      */
-    private void getRedirectionUrl(Token token, JsonObject document, Handler<Either<String, String>> handler) {
+    private void getRedirectionUrl(HttpServerRequest request, Token token, JsonObject document, Handler<Either<String, String>> handler) {
         Lool.wopiHelper.getActionUrl(document.getJsonObject("metadata").getString("content-type"), null, event -> {
             if (event.isRight()) {
                 String url = event.right().getValue();
                 String redirectURL = url +
-//                        "WOPISrc=" + Lool.wopiHelper.encodeWopiParam(getScheme(request) + "://" + getHost(request) + "/lool/wopi/files/" + document.getString("_id")) +
-                        "WOPISrc=" + Lool.wopiHelper.encodeWopiParam("https://nginx/lool/wopi/files/" + document.getString("_id")) +
+                        "WOPISrc=" + Lool.wopiHelper.encodeWopiParam(getScheme(request) + "://" + getHost(request) + "/lool/wopi/files/" + document.getString("_id")) +
+//                        "WOPISrc=" + Lool.wopiHelper.encodeWopiParam("https://nginx/lool/wopi/files/" + document.getString("_id")) +
                         "&title=" + Lool.wopiHelper.encodeWopiParam(document.getString("name")) +
                         "&access_token=" + token.getId() +
                         "&lang=fr" +
@@ -101,5 +107,25 @@ public class LoolController extends ControllerHelper {
     @Get("/discover")
     public void discover(HttpServerRequest request) {
         Lool.wopiHelper.discover(aBoolean -> request.response().setStatusCode(201).end("201 Created"));
+    }
+
+    @Get("/documents/:id")
+    @ApiDoc("Get all Libre Office Online file capabilities")
+    public void getDocument(HttpServerRequest request) {
+        String documentId = request.getParam("id");
+        documentService.get(documentId, event -> {
+            if (event.isRight()) {
+                JsonObject document = event.right().getValue();
+                String fileId = document.getString("file");
+                fileService.get(fileId, buffer -> request.response()
+                        .setStatusCode(200)
+                        .putHeader("Content-Type", "application/octet-stream")
+                        .putHeader("Content-Transfer-Encoding", "Binary")
+                        .putHeader("Content-disposition", "attachment; filename=" + document.getString("name"))
+                        .end(buffer));
+            } else {
+                renderError(request);
+            }
+        });
     }
 }
