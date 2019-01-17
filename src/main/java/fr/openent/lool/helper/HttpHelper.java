@@ -26,8 +26,8 @@ class HttpHelper {
         HttpClientOptions options = new HttpClientOptions()
                 .setDefaultHost(uri.getHost())
                 //FIXME FIx default port
-                .setDefaultPort("https".equals(uri.getScheme()) ? 9980 : 80)
-                //.setDefaultPort("https".equals(uri.getScheme()) ? 443 : 80)
+//                .setDefaultPort("https".equals(uri.getScheme()) ? 9980 : 80)
+                .setDefaultPort("https".equals(uri.getScheme()) ? 443 : 80)
                 .setVerifyHost(false)
                 .setTrustAll(true)
                 .setSsl("https".equals(uri.getScheme()))
