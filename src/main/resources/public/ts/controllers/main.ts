@@ -61,16 +61,18 @@ export const mainController = ng.controller('MainController', ['$scope',
             $scope.$apply();
         };
 
-        $scope.insertImage = (file) => {
-            const data: LoolEvent = {
+        $scope.insertImage = async (file) => {
+            const {data} = await http.get(`/lool/documents/${window.documentId}/tokens?access_token=${window.accessToken}&image=${file._id}`);
+            const {_id} = data;
+            const eventResponse: LoolEvent = {
                 MessageId: EVENT_RESPONSES.UI_InsertGraphic,
                 SendTime: Date.now().toString(),
                 Values: {
                     filename: file.title,
-                    url: `${window.origin}/lool/documents/${file._id}`
+                    url: `${window.origin}/lool/documents/${window.documentId}/image/${file._id}?access_token=${window.accessToken}&token=${_id}`
                 }
             };
-            $scope.message.send(data);
+            $scope.message.send(eventResponse);
             console.warn(data);
             $scope.display.lightbox = false;
             delete $scope.file;

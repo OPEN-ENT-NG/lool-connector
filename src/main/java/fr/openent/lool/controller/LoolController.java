@@ -6,11 +6,15 @@ import fr.openent.lool.service.DocumentService;
 import fr.openent.lool.service.FileService;
 import fr.openent.lool.service.Impl.DefaultDocumentService;
 import fr.openent.lool.service.Impl.DefaultFileService;
+import fr.openent.lool.service.Impl.DefaultTokenService;
+import fr.openent.lool.service.TokenService;
+import fr.openent.lool.utils.Bindings;
 import fr.wseduc.rs.ApiDoc;
 import fr.wseduc.rs.Get;
 import fr.wseduc.security.ActionType;
 import fr.wseduc.security.SecuredAction;
 import fr.wseduc.webutils.Either;
+import fr.wseduc.webutils.request.CookieHelper;
 import io.vertx.core.Handler;
 import io.vertx.core.eventbus.EventBus;
 import io.vertx.core.http.HttpServerRequest;
@@ -25,11 +29,13 @@ public class LoolController extends ControllerHelper {
 
     private final DocumentService documentService;
     private final FileService fileService;
+    private final TokenService tokenService;
 
     public LoolController(EventBus eb, Storage storage) {
         super();
         documentService = new DefaultDocumentService(eb, storage);
         fileService = new DefaultFileService(storage);
+        tokenService = new DefaultTokenService();
     }
 
     @Get("/documents/:id/open")
@@ -50,7 +56,8 @@ public class LoolController extends ControllerHelper {
                                 if (event.isRight()) {
                                     JsonObject params = new JsonObject()
                                             .put("lool-redirection", event.right().getValue())
-                                            .put("document-id", token.getDocument());
+                                            .put("document-id", token.getDocument())
+                                            .put("access-token", token.getId());
                                     renderView(request, params, "lool.html", null);
                                 } else {
                                     renderError(request);
@@ -109,23 +116,85 @@ public class LoolController extends ControllerHelper {
         Lool.wopiHelper.discover(aBoolean -> request.response().setStatusCode(201).end("201 Created"));
     }
 
-    @Get("/documents/:id")
+    @Get("/documents/:id/tokens")
+    @ApiDoc("Generate provisional token for given document")
+    @SecuredAction(value = "", type = ActionType.AUTHENTICATED)
+    public void generateDocumentToken(HttpServerRequest request) {
+        if (!request.params().contains("access_token") && !request.params().contains("image")) {
+            badRequest(request);
+            return;
+        }
+        String accessToken = request.getParam("access_token");
+        String image = request.getParam("image");
+        String document = request.getParam("id");
+        Lool.wopiHelper.validateToken(accessToken, document, Bindings.CONTRIB.toString(), validation -> {
+            if (!validation.getBoolean("valid")) {
+                unauthorized(request);
+                return;
+            }
+            UserUtils.getUserInfos(eb, request, user -> Lool.wopiHelper.userCanRead(CookieHelper.getInstance().getSigned("oneSessionId", request), image, canRead -> {
+                if (canRead) {
+                    tokenService.create(request.getParam("id"), user.getUserId(), either -> {
+                        if (either.isRight()) {
+                            renderJson(request, new JsonObject().put("_id", either.right().getValue().getString("_id")), 201);
+                        } else {
+                            renderError(request);
+                        }
+                    });
+                } else {
+                    unauthorized(request);
+                }
+            }));
+        });
+    }
+
+    @Get("/documents/:id/image/:imageId")
     @ApiDoc("Get all Libre Office Online file capabilities")
     public void getDocument(HttpServerRequest request) {
+        if (!request.params().contains("access_token") && !request.params().contains("token")) {
+            badRequest(request);
+            return;
+        }
         String documentId = request.getParam("id");
-        documentService.get(documentId, event -> {
-            if (event.isRight()) {
-                JsonObject document = event.right().getValue();
-                String fileId = document.getString("file");
-                fileService.get(fileId, buffer -> request.response()
-                        .setStatusCode(200)
-                        .putHeader("Content-Type", "application/octet-stream")
-                        .putHeader("Content-Transfer-Encoding", "Binary")
-                        .putHeader("Content-disposition", "attachment; filename=" + document.getString("name"))
-                        .end(buffer));
-            } else {
-                renderError(request);
+        String imageId = request.getParam("imageId");
+        String accessToken = request.getParam("access_token");
+        String token = request.getParam("token");
+        Lool.wopiHelper.validateToken(accessToken, documentId, Bindings.CONTRIB.toString(), validation -> {
+            if (!validation.getBoolean("valid")) {
+                unauthorized(request);
+                return;
             }
+            Token loolToken = new Token(validation.getJsonObject("token"));
+
+            tokenService.get(token, either -> {
+                if (either.isRight()) {
+                    if (loolToken.getUser().equals(either.right().getValue().getString("user"))) {
+                        tokenService.delete(token, deleteEither -> {
+                            if (deleteEither.isRight()) {
+                                documentService.get(imageId, event -> {
+                                    if (event.isRight()) {
+                                        JsonObject image = event.right().getValue();
+                                        fileService.get(image.getString("file"), buffer -> request.response()
+                                                .setStatusCode(200)
+                                                .putHeader("Content-Type", "application/octet-stream")
+                                                .putHeader("Content-Transfer-Encoding", "Binary")
+                                                .putHeader("Content-disposition", "attachment; filename=" + image.getString("name"))
+                                                .end(buffer));
+                                    } else {
+                                        renderError(request);
+                                    }
+                                });
+                            } else {
+                                renderError(request);
+                            }
+                        });
+                    } else {
+                        unauthorized(request);
+                    }
+                } else {
+                    renderError(request);
+                }
+            });
         });
     }
 }
