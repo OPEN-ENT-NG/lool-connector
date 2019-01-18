@@ -29,4 +29,9 @@ public interface TokenService {
      * @param handler Function handler returning data
      */
     void delete(String id, Handler<Either<String, JsonObject>> handler);
+
+    /**
+     * @param handler
+     */
+    void clean(Handler<Boolean> handler);
 }

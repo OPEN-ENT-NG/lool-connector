@@ -10,6 +10,8 @@ import org.entcore.common.user.UserUtils;
 
 import java.util.UUID;
 
+import static fr.wseduc.webutils.Utils.handlerToAsyncHandler;
+
 public class Token {
     private String _id;
     private String user;
@@ -17,6 +19,7 @@ public class Token {
     private final String sessionId;
     private String displayName;
     private final Long date;
+    private String filename;
 
     public Token(EventBus eb, HttpServerRequest request, Handler<Either<String, Token>> handler) {
         this.document = request.getParam("id");
@@ -27,7 +30,18 @@ public class Token {
             if (user != null) {
                 this.user = user.getUserId();
                 this.displayName = user.getUsername();
-                handler.handle(new Either.Right<>(this));
+                JsonObject action = new JsonObject()
+                        .put("action", "getDocument")
+                        .put("id", this.document);
+                eb.send("org.entcore.workspace", action, handlerToAsyncHandler(message -> {
+                    JsonObject body = message.body();
+                    if (!"ok".equals(body.getString("status"))) {
+                        handler.handle(new Either.Left<>("[Token@contructor] An error occurred when calling document"));
+                    } else {
+                        this.filename = message.body().getJsonObject("result").getString("name");
+                        handler.handle(new Either.Right<>(this));
+                    }
+                }));
             } else {
                 handler.handle(new Either.Left<>("[Token@contructor] User not found"));
             }
@@ -53,7 +67,8 @@ public class Token {
                 .put("document", this.document)
                 .put("sessionId", this.sessionId)
                 .put("displayName", this.displayName)
-                .put("date", this.date);
+                .put("date", this.date)
+                .put("filename", this.filename);
         if (this._id != null) {
             token.put("_id", this._id);
         }
@@ -74,5 +89,9 @@ public class Token {
 
     public String getSessionId() {
         return sessionId;
+    }
+
+    public String getFilename() {
+        return filename;
     }
 }

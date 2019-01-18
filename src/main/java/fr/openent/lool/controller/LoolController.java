@@ -197,4 +197,8 @@ public class LoolController extends ControllerHelper {
             });
         });
     }
+
+    public void cleanDocumentsToken(Handler<Boolean> handler) {
+        tokenService.clean(handler);
+    }
 }

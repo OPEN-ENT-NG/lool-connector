@@ -49,4 +49,9 @@ public class DefaultTokenService implements TokenService {
 
         MongoDb.getInstance().delete(TOKEN_COLLECTION, matcher, message -> handler.handle(Utils.validResult(message)));
     }
+
+    @Override
+    public void clean(Handler<Boolean> handler) {
+        MongoDb.getInstance().delete(TOKEN_COLLECTION, new JsonObject(), message -> handler.handle(Utils.validResult(message).isRight()));
+    }
 }

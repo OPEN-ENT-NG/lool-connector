@@ -19,10 +19,11 @@ public class Lool extends BaseServer {
 
         EventBus eb = vertx.eventBus();
         Storage storage = new StorageFactory(vertx, config).getStorage();
-
-        addController(new LoolController(eb, storage));
+        LoolController loolController = new LoolController(eb, storage);
+        addController(loolController);
         addController(new WopiController(eb, storage));
         vertx.setTimer(30000, aLong -> wopiHelper.discover(status -> log.info("Libre Office Online discover " + (status ? "OK" : "KO"))));
         vertx.setTimer(30000, timer -> wopiHelper.clearTokens(status -> log.info("Libre Office Online clear token " + (status.isRight() ? "OK" : "KO"))));
+        vertx.setTimer(30000, timer -> loolController.cleanDocumentsToken(status -> log.info("Libre Office Online document tokens " + (status ? "OK" : "KO"))));
     }
 }
