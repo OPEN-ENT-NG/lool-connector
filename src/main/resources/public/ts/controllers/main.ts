@@ -25,6 +25,9 @@ export const mainController = ng.controller('MainController', ['$scope',
                 this.source.postMessage(JSON.stringify(data), this.origin);
             }
         };
+        $scope.fromEvent = {
+            beforeunload: true
+        };
         $scope.display = {
             lightbox: false
         };
@@ -50,7 +53,9 @@ export const mainController = ng.controller('MainController', ['$scope',
             $scope.$apply();
         };
 
-        $scope.UI_Close = () => {
+        $scope.UI_Close = async () => {
+            $scope.fromEvent.beforeunload = false;
+            await http.delete(`/lool/wopi/documents/${window.documentId}/tokens/${window.accessToken}`);
             window.close();
         };
 
@@ -90,4 +95,10 @@ export const mainController = ng.controller('MainController', ['$scope',
                 $scope[event.MessageId](event.Values, e);
             }
         }, false);
+
+        eventer('beforeunload', () => {
+            if ($scope.fromEvent.beforeunload) {
+                $scope.UI_Close();
+            }
+        });
     }]);

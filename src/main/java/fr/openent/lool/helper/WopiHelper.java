@@ -325,4 +325,37 @@ public class WopiHelper {
     public void clearTokens(Handler<Either<String, JsonObject>> handler) {
         MongoDb.getInstance().delete(WopiHelper.TOKEN_COLLECTION, new JsonObject(), message -> handler.handle(Utils.validResult(message)));
     }
+
+    /**
+     * Check user is token owner on given document
+     *
+     * @param userId     User identifier
+     * @param token      Access token
+     * @param documentId Document identifier
+     * @param handler    Function handler returning data
+     */
+    public void isUserToken(String userId, String token, String documentId, Handler<Boolean> handler) {
+        JsonObject matcher = new JsonObject()
+                .put("user", userId)
+                .put("document", documentId)
+                .put("_id", token);
+
+        MongoDb.getInstance().delete(TOKEN_COLLECTION, matcher, message -> {
+            Either<String, JsonObject> either = Utils.validResult(message);
+            handler.handle(either.isRight() && either.right().getValue().containsKey("result"));
+        });
+    }
+
+    /**
+     * Delete given token
+     *
+     * @param token   Token to delete
+     * @param handler Function handler returning data
+     */
+    public void deleteToken(String token, Handler<Either<String, JsonObject>> handler) {
+        JsonObject matcher = new JsonObject()
+                .put("_id", token);
+
+        MongoDb.getInstance().delete(TOKEN_COLLECTION, matcher, message -> handler.handle(Utils.validResult(message)));
+    }
 }

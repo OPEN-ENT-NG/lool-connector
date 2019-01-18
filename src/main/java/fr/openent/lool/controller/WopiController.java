@@ -7,8 +7,11 @@ import fr.openent.lool.service.FileService;
 import fr.openent.lool.service.Impl.DefaultDocumentService;
 import fr.openent.lool.service.Impl.DefaultFileService;
 import fr.openent.lool.utils.Bindings;
+import fr.wseduc.rs.Delete;
 import fr.wseduc.rs.Get;
 import fr.wseduc.rs.Post;
+import fr.wseduc.security.ActionType;
+import fr.wseduc.security.SecuredAction;
 import fr.wseduc.webutils.Either;
 import io.vertx.core.Handler;
 import io.vertx.core.eventbus.EventBus;
@@ -16,6 +19,9 @@ import io.vertx.core.http.HttpServerRequest;
 import io.vertx.core.json.JsonObject;
 import org.entcore.common.controller.ControllerHelper;
 import org.entcore.common.storage.Storage;
+import org.entcore.common.user.UserUtils;
+
+import static org.entcore.common.http.response.DefaultResponseHandler.defaultResponseHandler;
 
 public class WopiController extends ControllerHelper {
 
@@ -127,6 +133,22 @@ public class WopiController extends ControllerHelper {
                     });
                 } else {
                     renderError(request);
+                }
+            });
+        });
+    }
+
+    @Delete("/wopi/documents/:id/tokens/:token")
+    @SecuredAction(value = "", type = ActionType.AUTHENTICATED)
+    public void deleteToken(HttpServerRequest request) {
+        String documentId = request.getParam("id");
+        String accessToken = request.getParam("token");
+        UserUtils.getUserInfos(eb, request, user -> {
+            Lool.wopiHelper.isUserToken(user.getUserId(), accessToken, documentId, isUserToken -> {
+                if (isUserToken) {
+                    Lool.wopiHelper.deleteToken(accessToken, defaultResponseHandler(request));
+                } else {
+                    unauthorized(request);
                 }
             });
         });
