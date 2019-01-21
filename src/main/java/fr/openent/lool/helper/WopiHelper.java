@@ -341,9 +341,9 @@ public class WopiHelper {
                 .put("document", documentId)
                 .put("_id", token);
 
-        MongoDb.getInstance().delete(TOKEN_COLLECTION, matcher, message -> {
+        MongoDb.getInstance().findOne(TOKEN_COLLECTION, matcher, message -> {
             Either<String, JsonObject> either = Utils.validResult(message);
-            handler.handle(either.isRight() && either.right().getValue().containsKey("result"));
+            handler.handle(either.isRight() && either.right().getValue().containsKey("_id"));
         });
     }
 
