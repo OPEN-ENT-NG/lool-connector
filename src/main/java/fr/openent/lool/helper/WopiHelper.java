@@ -46,6 +46,7 @@ public class WopiHelper {
     private HttpHelper httpHelper;
     private HttpClient httpClient;
     private EventBus eb;
+    private JsonObject config;
     private final String DISCOVER_COLLECTION = "lool_discover";
 
     public static final String TOKEN_COLLECTION = "wopi_token";
@@ -357,5 +358,13 @@ public class WopiHelper {
                 .put("_id", token);
 
         MongoDb.getInstance().delete(TOKEN_COLLECTION, matcher, message -> handler.handle(Utils.validResult(message)));
+    }
+
+    public JsonObject getConfig() {
+        return config;
+    }
+
+    public void setConfig(JsonObject config) {
+        this.config = config;
     }
 }

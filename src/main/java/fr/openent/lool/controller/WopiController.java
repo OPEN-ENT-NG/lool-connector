@@ -48,7 +48,8 @@ public class WopiController extends ControllerHelper {
                 if (event.isRight()) {
                     JsonObject document = event.right().getValue();
                     JsonObject metadata = document.getJsonObject("metadata");
-                    //TODO Update options and get version revision from document
+                    //TODO get version revision from document
+                    JsonObject config = Lool.wopiHelper.getConfig();
                     JsonObject response = new JsonObject()
                             .put("BaseFileName", document.getString("name"))
                             .put("Size", metadata.getInteger("size"))
@@ -56,17 +57,18 @@ public class WopiController extends ControllerHelper {
                             .put("UserId", token.getUser())
                             .put("UserFriendlyName", token.getDisplayName())
                             .put("Version", 34)
-                            .put("DisableCopy", false)
-                            .put("DisablePrint", false)
-                            .put("DisableExport", false)
-                            .put("HideExportOption", false)
-                            .put("DisableInactiveMessages", false)
-                            .put("HideUserList", false)
-                            .put("HideSaveOption", false)
-                            .put("EnableShare", true)
-                            .put("EnableInsertRemoteImage", true)
-                            .put("HidePrintOption", false)
-                            .put("UserCanNotWriteRelative", false)
+                            .put("DisableCopy", config.getBoolean("DisableCopy", true))
+                            .put("DisablePrint", config.getBoolean("DisablePrint", false))
+                            .put("DisableExport", config.getBoolean("DisableExport", false))
+                            .put("HideExportOption", config.getBoolean("HideExportOption", false))
+                            .put("DisableInactiveMessages", config.getBoolean("DisableInactiveMessages", false))
+                            .put("HideUserList", config.getBoolean("HideUserList", false))
+                            .put("HideSaveOption", config.getBoolean("HideSaveOption", false))
+                            .put("EnableShare", config.getBoolean("EnableShare", false))
+                            .put("EnableInsertRemoteImage", config.getBoolean("EnableInsertRemoteImage", true))
+                            .put("HidePrintOption", config.getBoolean("HidePrintOption", false))
+                            .put("UserCanNotWriteRelative", config.getBoolean("UserCanNotWriteRelative", true))
+                            .put("EnableOwnerTermination", config.getBoolean("EnableOwnerTermination", false))
                             .put("UserCanWrite", canWrite);
 
                     renderJson(request, response);

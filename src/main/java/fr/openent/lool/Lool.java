@@ -4,6 +4,7 @@ import fr.openent.lool.controller.LoolController;
 import fr.openent.lool.controller.WopiController;
 import fr.openent.lool.helper.WopiHelper;
 import io.vertx.core.eventbus.EventBus;
+import io.vertx.core.json.JsonObject;
 import org.entcore.common.http.BaseServer;
 import org.entcore.common.storage.Storage;
 import org.entcore.common.storage.StorageFactory;
@@ -16,6 +17,7 @@ public class Lool extends BaseServer {
 	public void start() throws Exception {
 		super.start();
         wopiHelper = new WopiHelper(vertx, config.getString("lool-server"));
+        wopiHelper.setConfig(config.getJsonObject("lool-config", new JsonObject()));
 
         EventBus eb = vertx.eventBus();
         Storage storage = new StorageFactory(vertx, config).getStorage();
