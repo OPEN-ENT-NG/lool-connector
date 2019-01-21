@@ -40,7 +40,7 @@ public class LoolController extends ControllerHelper {
 
     @Get("/documents/:id/open")
     @ApiDoc("Open document in Libre Office Online")
-    @SecuredAction("lool.open.file")
+    @SecuredAction("open.file")
     public void open(HttpServerRequest request) {
         UserUtils.getUserInfos(eb, request, user -> {
             if (user == null) {

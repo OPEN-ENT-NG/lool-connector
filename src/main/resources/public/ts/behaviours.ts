@@ -2,9 +2,9 @@ import {Behaviours} from 'entcore';
 
 Behaviours.register('lool', {
     rights: {
-        workflow: {},
+        workflow: {
+            openFile: 'fr.openent.lool.controller.LoolController|open'
+        },
         resource: {}
-    },
-    loadResources: async () => {
     }
 });
