@@ -1,6 +1,6 @@
 {
   "name": "lool",
-  "version": "0.2.0",
+  "version": "0.1.1",
   "description": "Libre Office Online connector",
   "main": "gulpfile.js",
   "scripts": {
