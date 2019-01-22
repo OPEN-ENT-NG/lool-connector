@@ -20,6 +20,8 @@ import io.vertx.core.eventbus.EventBus;
 import io.vertx.core.http.HttpServerRequest;
 import io.vertx.core.json.JsonObject;
 import org.entcore.common.controller.ControllerHelper;
+import org.entcore.common.events.EventStore;
+import org.entcore.common.events.EventStoreFactory;
 import org.entcore.common.storage.Storage;
 import org.entcore.common.user.UserUtils;
 
@@ -30,12 +32,14 @@ public class LoolController extends ControllerHelper {
     private final DocumentService documentService;
     private final FileService fileService;
     private final TokenService tokenService;
+    private final EventStore eventStore;
 
     public LoolController(EventBus eb, Storage storage) {
         super();
         documentService = new DefaultDocumentService(eb, storage);
         fileService = new DefaultFileService(storage);
         tokenService = new DefaultTokenService();
+        eventStore = EventStoreFactory.getFactory().getEventStore(Lool.class.getSimpleName());
     }
 
     @Get("/documents/:id/open")
@@ -59,6 +63,7 @@ public class LoolController extends ControllerHelper {
                                             .put("document-id", token.getDocument())
                                             .put("access-token", token.getId());
                                     renderView(request, params, "lool.html", null);
+                                    eventStore.createAndStoreEvent("ACCESS", request);
                                 } else {
                                     renderError(request);
                                 }
