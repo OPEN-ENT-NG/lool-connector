@@ -1,5 +1,6 @@
 package fr.openent.lool.bean;
 
+import fr.wseduc.mongodb.MongoDb;
 import fr.wseduc.webutils.Either;
 import fr.wseduc.webutils.request.CookieHelper;
 import io.vertx.core.Handler;
@@ -18,12 +19,12 @@ public class Token {
     private final String document;
     private final String sessionId;
     private String displayName;
-    private final Long date;
+    private final JsonObject date;
     private String filename;
 
     public Token(EventBus eb, HttpServerRequest request, Handler<Either<String, Token>> handler) {
         this.document = request.getParam("id");
-        this.date = System.currentTimeMillis();
+        this.date = MongoDb.now();
         this.sessionId = CookieHelper.getInstance().getSigned("oneSessionId", request);
         this._id = UUID.randomUUID().toString();
         UserUtils.getUserInfos(eb, request, user -> {
@@ -54,7 +55,7 @@ public class Token {
         this.document = object.getString("document");
         this.sessionId = object.getString("sessionId");
         this.displayName = object.getString("displayName");
-        this.date = object.getLong("date");
+        this.date = object.getJsonObject("date");
     }
 
     public String getUser() {

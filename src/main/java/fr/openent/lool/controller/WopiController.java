@@ -2,10 +2,12 @@ package fr.openent.lool.controller;
 
 import fr.openent.lool.Lool;
 import fr.openent.lool.bean.Token;
+import fr.openent.lool.helper.TraceHelper;
 import fr.openent.lool.service.DocumentService;
 import fr.openent.lool.service.FileService;
 import fr.openent.lool.service.Impl.DefaultDocumentService;
 import fr.openent.lool.service.Impl.DefaultFileService;
+import fr.openent.lool.utils.Actions;
 import fr.openent.lool.utils.Bindings;
 import fr.wseduc.rs.Delete;
 import fr.wseduc.rs.Get;
@@ -106,6 +108,7 @@ public class WopiController extends ControllerHelper {
                 unauthorized(request);
                 return;
             }
+            Token token = new Token(validation.getJsonObject("token"));
 
             documentService.get(request.getParam("id"), event -> {
                 if (event.isRight()) {
@@ -131,6 +134,7 @@ public class WopiController extends ControllerHelper {
                             documentService.updateRevisionId(request.getParam("id"), storageBody.getString("_id"), updateHandler);
                         } else {
                             documentService.update(request.getParam("id"), storageBody.getString("_id"), storageBody.getJsonObject("metadata"), updateHandler);
+                            TraceHelper.add(Actions.NEW_VERSION.name(), token.getUser(), token.getDocument(), TraceHelper.getFileExtension(document.getString("name")));
                         }
                     });
                 } else {

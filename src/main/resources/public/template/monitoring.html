@@ -1,0 +1,83 @@
+<style>
+    .widget-number .number {
+        font-size: 52px;
+        width: 100%;
+        height: 52px;
+        line-height: 52px;
+        text-align: center;
+    }
+
+    .widget-number h4 {
+        text-align: center;
+    }
+</style>
+<div class="monitoring ten centered twelve-mobile twelve-tablette-wide">
+    <div class="row">
+        <div class="cell four horizontal-spacing-twice vertical-spacing twelve-mobile">
+            <article class="widget-number">
+                <h4>
+                    <i18n>lool.connected.users</i18n>
+                </h4>
+                <div class="number">[[userCounter.data]]</div>
+            </article>
+        </div>
+        <div class="cell four horizontal-spacing-twice vertical-spacing twelve-mobile">
+            <article class="widget-number">
+                <h4>
+                    <i18n>lool.connexions.total</i18n>
+                </h4>
+                <div class="number">[[accessCounter.data]]</div>
+            </article>
+        </div>
+        <div class="cell four horizontal-spacing-twice vertical-spacing twelve-mobile">
+            <article class="widget-number">
+                <h4>
+                    <i18n>lool.versions.total</i18n>
+                </h4>
+                <div class="number">[[newVersionCounter.data]]</div>
+            </article>
+        </div>
+    </div>
+    <div class="row">
+        <div class="cell four horizontal-spacing-twice vertical-spacing twelve-mobile">
+            <article>
+                <h4>
+                    <i18n>lool.extensions.groups</i18n>
+                </h4>
+                <div class="centered" style="max-width: 350px; max-height: 350px; width: 90%;">
+                    <div ng-if="!extensionGraph.loading">
+                        <donut series="extensionGraph.series"
+                               labels="extensionGraph.labels"
+                               width="'100%'"
+                               options="extensionGraph.options"></donut>
+                    </div>
+                </div>
+            </article>
+        </div>
+        <div class="cell eight horizontal-spacing-twice vertical-spacing twelve-mobile">
+            <article>
+                <h4>
+                    <i18n>lool.opened.files</i18n>
+                </h4>
+                <table class="twelve">
+                    <thead>
+                    <tr>
+                        <td>
+                            <i18n>lool.file</i18n>
+                        </td>
+                        <td>
+                            <i18n>lool.user.number</i18n>
+                        </td>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr ng-repeat="document in documentList.data">
+                        <td>[[document.filename]]</td>
+                        <td>[[document.users]]</td>
+                    </tr>
+                    </tbody>
+                </table>
+            </article>
+        </div>
+    </div>
+</div>

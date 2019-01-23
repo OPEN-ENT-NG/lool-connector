@@ -5,6 +5,7 @@
     "declaration": false,
     "moduleResolution": "node",
     "sourceMap": true,
+    "strict": true,
     "noImplicitAny": false,
     "lib": [
       "es2015",

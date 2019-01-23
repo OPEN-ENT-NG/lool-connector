@@ -2,12 +2,14 @@ package fr.openent.lool.controller;
 
 import fr.openent.lool.Lool;
 import fr.openent.lool.bean.Token;
+import fr.openent.lool.helper.TraceHelper;
 import fr.openent.lool.service.DocumentService;
 import fr.openent.lool.service.FileService;
 import fr.openent.lool.service.Impl.DefaultDocumentService;
 import fr.openent.lool.service.Impl.DefaultFileService;
 import fr.openent.lool.service.Impl.DefaultTokenService;
 import fr.openent.lool.service.TokenService;
+import fr.openent.lool.utils.Actions;
 import fr.openent.lool.utils.Bindings;
 import fr.wseduc.rs.ApiDoc;
 import fr.wseduc.rs.Get;
@@ -56,14 +58,16 @@ public class LoolController extends ControllerHelper {
                     Token token = tokenEvent.right().getValue();
                     documentService.get(token.getDocument(), result -> {
                         if (result.isRight()) {
-                            getRedirectionUrl(request, token, result.right().getValue(), event -> {
+                            JsonObject document = result.right().getValue();
+                            getRedirectionUrl(request, token, document, event -> {
                                 if (event.isRight()) {
                                     JsonObject params = new JsonObject()
                                             .put("lool-redirection", event.right().getValue())
                                             .put("document-id", token.getDocument())
                                             .put("access-token", token.getId());
                                     renderView(request, params, "lool.html", null);
-                                    eventStore.createAndStoreEvent("ACCESS", request);
+                                    eventStore.createAndStoreEvent(Actions.ACCESS.name(), request);
+                                    TraceHelper.add(Actions.ACCESS.name(), token.getUser(), token.getDocument(), TraceHelper.getFileExtension(document.getString("name")));
                                 } else {
                                     renderError(request);
                                 }
@@ -93,8 +97,8 @@ public class LoolController extends ControllerHelper {
             if (event.isRight()) {
                 String url = event.right().getValue();
                 String redirectURL = url +
-                        "WOPISrc=" + Lool.wopiHelper.encodeWopiParam(getScheme(request) + "://" + getHost(request) + "/lool/wopi/files/" + document.getString("_id")) +
-//                        "WOPISrc=" + Lool.wopiHelper.encodeWopiParam("https://nginx/lool/wopi/files/" + document.getString("_id")) +
+//                        "WOPISrc=" + Lool.wopiHelper.encodeWopiParam(getScheme(request) + "://" + getHost(request) + "/lool/wopi/files/" + document.getString("_id")) +
+                        "WOPISrc=" + Lool.wopiHelper.encodeWopiParam("https://nginx/lool/wopi/files/" + document.getString("_id")) +
                         "&title=" + Lool.wopiHelper.encodeWopiParam(document.getString("name")) +
                         "&access_token=" + token.getId() +
                         "&lang=fr" +
