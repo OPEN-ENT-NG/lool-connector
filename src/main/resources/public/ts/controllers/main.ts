@@ -43,19 +43,19 @@ export const mainController = ng.controller('MainController', ['$scope',
         };
 
         $scope.UI_InsertGraphic = () => {
-            // Format de retour
-            // {
-            //     filename: filename,
-            //     url: url
-            // }
             template.open('lightbox', 'UI_InsertGraphic');
             $scope.display.lightbox = true;
             $scope.$apply();
         };
 
-        $scope.UI_Close = async () => {
+        $scope.UI_Close = () => {
             $scope.fromEvent.beforeunload = false;
-            await http.delete(`/lool/wopi/documents/${window.documentId}/tokens/${window.accessToken}`);
+            const url = `/lool/wopi/documents/${window.documentId}/tokens/${window.accessToken}`;
+            if (navigator.sendBeacon) {
+                navigator.sendBeacon(url, {})
+            } else {
+                http.delete(url);
+            }
             window.close();
         };
 
@@ -78,7 +78,6 @@ export const mainController = ng.controller('MainController', ['$scope',
                 }
             };
             $scope.message.send(eventResponse);
-            console.warn(data);
             $scope.display.lightbox = false;
             delete $scope.file;
             $scope.$apply();

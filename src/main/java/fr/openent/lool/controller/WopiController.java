@@ -9,6 +9,7 @@ import fr.openent.lool.service.Impl.DefaultDocumentService;
 import fr.openent.lool.service.Impl.DefaultFileService;
 import fr.openent.lool.utils.Actions;
 import fr.openent.lool.utils.Bindings;
+import fr.wseduc.rs.ApiDoc;
 import fr.wseduc.rs.Delete;
 import fr.wseduc.rs.Get;
 import fr.wseduc.rs.Post;
@@ -158,5 +159,12 @@ public class WopiController extends ControllerHelper {
                 }
             });
         });
+    }
+
+    @Post("/wopi/documents/:id/tokens/:token")
+    @ApiDoc("Delete token based on beacon api")
+    @SecuredAction(value = "", type = ActionType.AUTHENTICATED)
+    public void deleteTokenWithBeacon(HttpServerRequest request) {
+        deleteToken(request);
     }
 }
