@@ -2,6 +2,7 @@ package fr.openent.lool.controller;
 
 import fr.openent.lool.Lool;
 import fr.openent.lool.bean.Token;
+import fr.openent.lool.helper.HttpHelper;
 import fr.openent.lool.helper.TraceHelper;
 import fr.openent.lool.service.DocumentService;
 import fr.openent.lool.service.FileService;
@@ -16,17 +17,27 @@ import fr.wseduc.rs.Get;
 import fr.wseduc.security.ActionType;
 import fr.wseduc.security.SecuredAction;
 import fr.wseduc.webutils.Either;
+import fr.wseduc.webutils.data.FileResolver;
 import fr.wseduc.webutils.request.CookieHelper;
 import io.vertx.core.Handler;
+import io.vertx.core.Vertx;
+import io.vertx.core.buffer.Buffer;
 import io.vertx.core.eventbus.EventBus;
 import io.vertx.core.http.HttpServerRequest;
+import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
+import org.entcore.common.bus.WorkspaceHelper;
 import org.entcore.common.controller.ControllerHelper;
 import org.entcore.common.events.EventStore;
 import org.entcore.common.events.EventStoreFactory;
 import org.entcore.common.storage.Storage;
 import org.entcore.common.user.UserUtils;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+
+import static fr.wseduc.webutils.Utils.handlerToAsyncHandler;
 import static org.entcore.common.http.response.DefaultResponseHandler.arrayResponseHandler;
 
 public class LoolController extends ControllerHelper {
@@ -35,13 +46,17 @@ public class LoolController extends ControllerHelper {
     private final FileService fileService;
     private final TokenService tokenService;
     private final EventStore eventStore;
+    private final HttpHelper httpHelper;
+    private WorkspaceHelper workspaceHelper;
 
-    public LoolController(EventBus eb, Storage storage) {
+    public LoolController(Vertx vertx, EventBus eb, Storage storage) {
         super();
         documentService = new DefaultDocumentService(eb, storage);
         fileService = new DefaultFileService(storage);
         tokenService = new DefaultTokenService();
         eventStore = EventStoreFactory.getFactory().getEventStore(Lool.class.getSimpleName());
+        this.httpHelper = new HttpHelper(vertx);
+        this.workspaceHelper = new WorkspaceHelper(eb, storage);
     }
 
     @Get("/documents/:id/open")
@@ -205,6 +220,62 @@ public class LoolController extends ControllerHelper {
                 }
             });
         });
+    }
+
+    @Get("/document")
+    @ApiDoc("Create new document based on lool templates")
+    @SecuredAction("create.document")
+    public void createDocumentFromTemplate(HttpServerRequest request) {
+        if (!request.params().contains("type") && !request.params().contains("name")) {
+            badRequest(request);
+            return;
+        }
+        UserUtils.getUserInfos(eb, request, user -> {
+            request.pause();
+            String path = FileResolver.absolutePath("public/lool-templates/");
+            String type = request.getParam("type");
+            String filePath = path + "template." + type;
+            String filename = request.getParam("name") + "." + type;
+            String folder = request.getParam("folder");
+            String contentType;
+            try {
+                contentType = Files.probeContentType(Paths.get(filePath));
+            } catch (IOException e) {
+                log.error("[LoolController@createDocumentFromTemplate] Failed to read template." + type + " content type", e);
+                renderError(request);
+                return;
+            }
+            vertx.fileSystem().readFile(filePath, readEvent -> {
+                if (readEvent.succeeded()) {
+                    Buffer fileBuffer = readEvent.result();
+                    fileService.add(fileBuffer, contentType, filename, either -> {
+                        if (either.isLeft()) {
+                            log.error("[LoolController@createDocumentFromTemplate] Failed to insert file in file system from buffer");
+                            renderError(request);
+                            return;
+                        }
+                        JsonObject file = either.right().getValue();
+                        this.workspaceHelper.addDocument(file, user, filename, "media-library", false, new JsonArray(), handlerToAsyncHandler(message -> {
+                            if ("ok".equals(message.body().getString("status"))) {
+                                String documentId = message.body().getString("_id");
+                                if (folder != null) {
+                                    workspaceHelper.moveDocument(documentId, folder, user, res -> {
+                                        redirect(request, "/lool/documents/" + documentId + "/open");
+                                    });
+                                } else {
+                                    redirect(request, "/lool/documents/" + documentId + "/open");
+                                }
+                            } else {
+                                renderError(request);
+                            }
+                        }));
+                    });
+                } else {
+                    log.error("[LoolController@createDocumentFromTemplate] Failed to read file : " + filePath, readEvent.cause());
+                }
+            });
+        });
+
     }
 
     public void cleanDocumentsToken(Handler<Boolean> handler) {

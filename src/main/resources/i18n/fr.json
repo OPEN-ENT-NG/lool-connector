@@ -45,5 +45,18 @@
   "lool.opened.files": "Documents ouverts",
   "lool.file": "Fichier",
   "lool.user.number": "Nombre d'utilisateurs",
-  "lool.other": "autres"
+  "lool.other": "autres",
+  "lool.sniplet.create-document.title": "Créer un document",
+  "lool.sniplet.create-document.description": "Créer un document Libre Office et l'ajouter dans l'espace documentaire",
+  "lool.sniplet.create-document.button.placeholder": "Créer un document",
+  "lool.sniplet.create-document.type.odt": "Texte",
+  "lool.sniplet.create-document.type.odp": "Présentation",
+  "lool.sniplet.create-document.type.ods": "Classeur",
+  "lool.sniplet.create-document.type.odg": "Dessin",
+  "lool.sniplet.create-document.lightbox.title": "Créer un document",
+  "lool.sniplet.create-document.name": "Nom",
+  "lool.sniplet.create-document.validation": "Valider",
+  "lool.sniplet.create-document.step.1": "Type de fichier",
+  "lool.sniplet.create-document.step.2": "Nom",
+  "lool.sniple.create-document.filename": "Nom du fichier"
 }

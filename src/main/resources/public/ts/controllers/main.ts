@@ -1,4 +1,4 @@
-import {idiom, ng, template} from 'entcore';
+import {Behaviours, ng, template} from 'entcore';
 import http from "axios";
 
 declare let window: any;
@@ -17,7 +17,6 @@ const EVENT_RESPONSES = {
 export const mainController = ng.controller('MainController', ['$scope',
     ($scope) => {
         $scope.documentId = window.documentId;
-        idiom.addBundle('/workspace/i18n');
         $scope.message = {
             origin: null,
             source: null,
@@ -83,21 +82,23 @@ export const mainController = ng.controller('MainController', ['$scope',
             $scope.$apply();
         };
 
-        const eventMethod = window.addEventListener ? 'addEventListener' : 'attachEvent';
-        const eventer = window[eventMethod];
-        const messageEvent = eventMethod == 'attachEvent' ? 'onmessage' : 'message';
-
-        eventer(messageEvent, function (e: MessageEvent) {
+        Behaviours.applicationsBehaviours.lool.initPostMessage(function (e: MessageEvent) {
             const event: LoolEvent = JSON.parse(e.data);
-            console.log(event);
             if (event.MessageId in $scope) {
                 $scope[event.MessageId](event.Values, e);
             }
-        }, false);
+        });
 
+        const eventMethod = window.addEventListener ? 'addEventListener' : 'attachEvent';
+        const eventer = window[eventMethod];
         eventer('beforeunload', () => {
             if ($scope.fromEvent.beforeunload) {
                 $scope.UI_Close();
             }
         });
+
+        const message = {
+            id: 'lool@resync'
+        };
+        window.opener.postMessage(JSON.stringify(message), window);
     }]);

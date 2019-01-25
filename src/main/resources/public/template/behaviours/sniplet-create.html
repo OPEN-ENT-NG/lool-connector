@@ -1,0 +1,48 @@
+<div class="sniplet-create">
+    <a ng-click="openLightbox()" class="classic-link">
+        <i18n>lool.sniplet.create-document.title</i18n>
+    </a>
+    <lightbox on-close="lightbox.display = false;"
+              show="lightbox.display">
+        <div class="row">
+            <h2>
+                <i18n>lool.sniplet.create-document.lightbox.title</i18n>
+            </h2>
+        </div>
+        <h4>
+            <i18n>lool.sniplet.create-document.step.1</i18n>
+        </h4>
+        <div class="row document-type-list vertical-spacing-six">
+            <div ng-repeat="type in documentTypeList" class="document-type three cell"
+                 ng-class="{ selected: document.extension === type.extension }">
+                <label class="eleven centered">
+                    <span>
+                        <span class="text [[type.extension]]">
+                            [[lang.translate('lool.sniplet.create-document.type.' + type.extension)]]
+                        </span>
+                        <input type="radio" value="[[type.extension]]" name="file-type"
+                               class="zero-desktop zero-mobile"
+                               ng-model="document.extension">
+                    </span>
+                </label>
+            </div>
+        </div>
+        <h4>
+            <i18n>lool.sniplet.create-document.step.2</i18n>
+        </h4>
+        <div class="row">
+            <div class="cell twelve">
+                <input type="text" ng-model="document.name" class="twelve"
+                       i18n-placeholder="lool.sniple.create-document.filename"/>
+            </div>
+        </div>
+        <div class="row">
+            <div class="right-magnet">
+                <button ng-click="createDocument($event)"
+                        ng-disabled="document.name === undefined || document.name.trim() === ''">
+                    <i18n>lool.sniplet.create-document.validation</i18n>
+                </button>
+            </div>
+        </div>
+    </lightbox>
+</div>

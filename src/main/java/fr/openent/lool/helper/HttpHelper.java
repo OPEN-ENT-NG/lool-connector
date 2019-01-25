@@ -9,10 +9,10 @@ import java.net.URI;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 
-class HttpHelper {
+public class HttpHelper {
     private final Vertx vertx;
 
-    HttpHelper(Vertx vertx) {
+    public HttpHelper(Vertx vertx) {
         this.vertx = vertx;
     }
 
@@ -22,12 +22,12 @@ class HttpHelper {
      * @param uri URI used for Http client
      * @return Http client
      */
-    HttpClient generateHttpClient(URI uri) {
+    public HttpClient generateHttpClient(URI uri) {
         HttpClientOptions options = new HttpClientOptions()
                 .setDefaultHost(uri.getHost())
                 //FIXME FIx default port
 //                .setDefaultPort("https".equals(uri.getScheme()) ? 9980 : 80)
-                .setDefaultPort("https".equals(uri.getScheme()) ? 443 : 80)
+                .setDefaultPort("https".equals(uri.getScheme()) ? 443 : 8090)
                 .setVerifyHost(false)
                 .setTrustAll(true)
                 .setSsl("https".equals(uri.getScheme()))

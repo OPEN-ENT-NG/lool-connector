@@ -36,4 +36,28 @@ public class DefaultFileService implements FileService {
         request.exceptionHandler(throwable -> handler.handle(new Either.Left<>("[DefaultFileService@add]An error occurred when uploading file")));
     }
 
+    @Override
+    public void add(HttpServerRequest request, Handler<Either<String, JsonObject>> handler) {
+        storage.writeUploadFile(request, message -> {
+            if (!"ok".equals(message.getString("status"))) {
+                handler.handle(new Either.Left<>("[DefaultFileService@add] Failed to upload file from http request"));
+            } else {
+                message.remove("status");
+                handler.handle(new Either.Right<>(message));
+            }
+        });
+    }
+
+    @Override
+    public void add(Buffer file, String contentType, String filename, Handler<Either<String, JsonObject>> handler) {
+        storage.writeBuffer(file, contentType, filename, message -> {
+            if (!"ok".equals(message.getString("status"))) {
+                handler.handle(new Either.Left<>("[DefaultFileService@add] Failed to upload file from buffer"));
+            } else {
+                message.remove("status");
+                handler.handle(new Either.Right<>(message));
+            }
+        });
+    }
+
 }

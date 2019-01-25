@@ -25,4 +25,22 @@ public interface FileService {
      * @param handler     Function handler returning data
      */
     void add(HttpServerRequest request, String contentType, String filename, Handler<Either<String, JsonObject>> handler);
+
+    /**
+     * Add file in file system from http request
+     *
+     * @param request Http request uploading file
+     * @param handler Function handler returning data
+     */
+    void add(HttpServerRequest request, Handler<Either<String, JsonObject>> handler);
+
+    /**
+     * Add file in file systeme based on given buffer
+     *
+     * @param file        File buffer
+     * @param contentType File content type
+     * @param filename    Filename
+     * @param handler     Function handler returning data
+     */
+    void add(Buffer file, String contentType, String filename, Handler<Either<String, JsonObject>> handler);
 }

@@ -22,7 +22,7 @@ public class Lool extends BaseServer {
 
         EventBus eb = vertx.eventBus();
         Storage storage = new StorageFactory(vertx, config).getStorage();
-        LoolController loolController = new LoolController(eb, storage);
+        LoolController loolController = new LoolController(vertx, eb, storage);
         addController(loolController);
         addController(new WopiController(eb, storage));
         addController(new MonitoringController());

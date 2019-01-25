@@ -32,4 +32,6 @@ public interface DocumentService {
      * @param handler    Function handler returning data
      */
     void updateRevisionId(String documentId, String newFileId, Handler<Either<String, JsonObject>> handler);
+
+//    void add()
 }
