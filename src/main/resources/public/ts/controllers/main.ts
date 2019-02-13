@@ -1,4 +1,4 @@
-import {Behaviours, ng, template} from 'entcore';
+import {Behaviours, moment, ng, template, workspace} from 'entcore';
 import http from "axios";
 
 declare let window: any;
@@ -30,6 +30,21 @@ export const mainController = ng.controller('MainController', ['$scope',
         $scope.display = {
             lightbox: false
         };
+
+        $scope.shortDate = function (dateItem) {
+            if (!dateItem) {
+                return moment().format('L');
+            }
+            if (typeof dateItem === "number")
+                return moment(dateItem).format('L');
+
+            if (typeof dateItem === "string")
+                return moment(dateItem.split(' ')[0]).format('L');
+
+            return moment().format('L');
+        };
+
+        $scope.formatDocumentSize = workspace.v2.service.formatDocumentSize;
 
         $scope.App_LoadingStatus = ({Status}: any, {source, origin}: MessageEvent) => {
             $scope.message = {...$scope.message, source, origin};
@@ -97,8 +112,10 @@ export const mainController = ng.controller('MainController', ['$scope',
             }
         });
 
-        const message = {
-            id: 'lool@resync'
-        };
-        window.opener.postMessage(JSON.stringify(message), window);
+        if (window.opener) {
+            const message = {
+                id: 'lool@resync'
+            };
+            window.opener.postMessage(JSON.stringify(message), window);
+        }
     }]);

@@ -24,16 +24,16 @@
         <tr ng-repeat="revision in revisions | orderBy:'date.$date':true">
             <td></td>
             <td>
-                <a ng-href="document/[[documentId]]/revision/[[revision._id]]">[[revision.name]]</a>
+                <a ng-href="/workspace/document/[[documentId]]/revision/[[revision._id]]">[[revision.name]]</a>
             </td>
             <td>
                 <a ng-href="/userbook/annuaire#[[revision.userId]]">[[revision.userName]]</a>
             </td>
             <td>
-                [[revision.date.$date]]
+                [[shortDate(revision.date.$date)]]
             </td>
             <td>
-                [[revision.metadata.size]]
+                [[formatDocumentSize(revision.metadata.size)]]
             </td>
         </tr>
         </tbody>
