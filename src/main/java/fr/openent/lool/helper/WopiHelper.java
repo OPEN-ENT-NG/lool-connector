@@ -289,6 +289,8 @@ public class WopiHelper {
             QueryBuilder query = QueryBuilder.start("_id").is(documentId).or(
                     QueryBuilder.start("owner").is(session.getString("userId")).get(),
                     QueryBuilder.start("shared").elemMatch(
+                            new QueryBuilder().or(groups.toArray(new DBObject[groups.size()])).get()).get(),
+                    QueryBuilder.start("inheritedShares").elemMatch(
                             new QueryBuilder().or(groups.toArray(new DBObject[groups.size()])).get()).get()
             );
 

@@ -2,7 +2,7 @@ package fr.openent.lool.utils;
 
 public enum Bindings {
     READ("org-entcore-workspace-controllers-WorkspaceController|getDocument"),
-    CONTRIB("org-entcore-workspace-controllers-WorkspaceService|updateDocument");
+    CONTRIB("org-entcore-workspace-controllers-WorkspaceController|updateDocument");
 
     private final String actionName;
 
