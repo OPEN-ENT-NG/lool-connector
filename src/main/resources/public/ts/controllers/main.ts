@@ -47,7 +47,6 @@ export const mainController = ng.controller('MainController', ['$scope',
         $scope.formatDocumentSize = workspace.v2.service.formatDocumentSize;
 
         $scope.App_LoadingStatus = ({Status}: any, {source, origin}: MessageEvent) => {
-            $scope.message = {...$scope.message, source, origin};
             const data: LoolEvent = {
                 MessageId: EVENT_RESPONSES.App_LoadingStatus,
                 SendTime: Date.now().toString()
@@ -97,7 +96,14 @@ export const mainController = ng.controller('MainController', ['$scope',
             $scope.$apply();
         };
 
+        $scope.initMessageApi = ({source, origin}: MessageEvent) => {
+            if (!$scope.message.source || !$scope.message.origin) {
+                $scope.message = {...$scope.message, source, origin};
+            }
+        };
+
         Behaviours.applicationsBehaviours.lool.initPostMessage(function (e: MessageEvent) {
+            $scope.initMessageApi(e);
             const event: LoolEvent = JSON.parse(e.data);
             if (event.MessageId in $scope) {
                 $scope[event.MessageId](event.Values, e);
