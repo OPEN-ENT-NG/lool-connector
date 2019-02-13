@@ -79,7 +79,8 @@ public class LoolController extends ControllerHelper {
                                     JsonObject params = new JsonObject()
                                             .put("lool-redirection", event.right().getValue())
                                             .put("document-id", token.getDocument())
-                                            .put("access-token", token.getId());
+                                            .put("access-token", token.getId())
+                                            .put("resync", request.params().contains("resync") ? request.getParam("resync") : false);
                                     renderView(request, params, "lool.html", null);
                                     eventStore.createAndStoreEvent(Actions.ACCESS.name(), request);
                                     TraceHelper.add(Actions.ACCESS.name(), token.getUser(), token.getDocument(), TraceHelper.getFileExtension(document.getString("name")));
@@ -260,10 +261,10 @@ public class LoolController extends ControllerHelper {
                                 String documentId = message.body().getString("_id");
                                 if (folder != null) {
                                     workspaceHelper.moveDocument(documentId, folder, user, res -> {
-                                        redirect(request, "/lool/documents/" + documentId + "/open");
+                                        redirect(request, "/lool/documents/" + documentId + "/open?resync=true");
                                     });
                                 } else {
-                                    redirect(request, "/lool/documents/" + documentId + "/open");
+                                    redirect(request, "/lool/documents/" + documentId + "/open?resync=true");
                                 }
                             } else {
                                 renderError(request);

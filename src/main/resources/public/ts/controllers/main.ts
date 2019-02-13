@@ -118,7 +118,7 @@ export const mainController = ng.controller('MainController', ['$scope',
             }
         });
 
-        if (window.opener) {
+        if (window.opener && window.resync == 'true') {
             const message = {
                 id: 'lool@resync'
             };
