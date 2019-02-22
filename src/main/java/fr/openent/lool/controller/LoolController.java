@@ -74,7 +74,7 @@ public class LoolController extends ControllerHelper {
                     documentService.get(token.getDocument(), result -> {
                         if (result.isRight()) {
                             JsonObject document = result.right().getValue();
-                            getRedirectionUrl(request, token, document, event -> {
+                            getRedirectionUrl(request, document, event -> {
                                 if (event.isRight()) {
                                     JsonObject params = new JsonObject()
                                             .put("lool-redirection", event.right().getValue())
@@ -104,19 +104,16 @@ public class LoolController extends ControllerHelper {
      * Get redirection url for Libre Office Online document
      *
      * @param request Server request
-     * @param token    User Libre Office Online auth token
      * @param document Document
      * @param handler Function handler returning data
      */
-    private void getRedirectionUrl(HttpServerRequest request, Token token, JsonObject document, Handler<Either<String, String>> handler) {
+    private void getRedirectionUrl(HttpServerRequest request, JsonObject document, Handler<Either<String, String>> handler) {
         Lool.wopiHelper.getActionUrl(document.getJsonObject("metadata").getString("content-type"), null, event -> {
             if (event.isRight()) {
                 String url = event.right().getValue();
                 String redirectURL = url +
                         "WOPISrc=" + Lool.wopiHelper.encodeWopiParam(getScheme(request) + "://" + getHost(request) + "/lool/wopi/files/" + document.getString("_id")) +
-//                        "WOPISrc=" + Lool.wopiHelper.encodeWopiParam("https://nginx/lool/wopi/files/" + document.getString("_id")) +
                         "&title=" + Lool.wopiHelper.encodeWopiParam(document.getString("name")) +
-                        "&access_token=" + token.getId() +
                         "&lang=fr" +
                         "&closebutton=0" +
                         "&revisionhistory=1";

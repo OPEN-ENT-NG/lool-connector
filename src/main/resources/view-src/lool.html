@@ -16,7 +16,11 @@
 </head>
 
 <body ng-controller="MainController" style="height: 100%; width: 100%">
-<iframe id="adapter" class="adapter" src="{{lool-redirection}}"
+<form action="{{lool-redirection}}" id="loleafletform_viewer" target="loleafletframe_viewer"
+      method="post">
+    <input type="hidden" name="access_token" value="{{access-token}}">
+</form>
+<iframe id="adapter" class="adapter" name="loleafletframe_viewer"
         style="z-index:500; position: absolute;height: calc(100% - 64px);width:100%; top: 64px;"></iframe>
 <portal>
     <lightbox on-close="display.lightbox = false;"
@@ -24,6 +28,8 @@
         <container template="lightbox"></container>
     </lightbox>
 </portal>
+<script type="text/javascript">
+    document.getElementById("loleafletform_viewer").submit();
+</script>
 </body>
-
 </html>
