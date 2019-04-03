@@ -165,30 +165,32 @@ public class WopiHelper {
             NodeList actions = xml.getElementsByTagName("app");
             List<Future> futures = new ArrayList<>();
 
-            Future<JsonObject> deleteFuture = Future.future();
-            futures.add(deleteFuture);
-            MongoDb.getInstance().delete(DISCOVER_COLLECTION, new JsonObject(), FutureHelper.getFutureHandler(deleteFuture));
+            MongoDb.getInstance().delete(DISCOVER_COLLECTION, new JsonObject(), deleteEvent -> {
+                if ("ok".equals(deleteEvent.body().getString("status"))) {
+                    for (int i = 0; i < actions.getLength(); i++) {
+                        Element app = (Element) actions.item(i);
+                        Element action = (Element) app.getElementsByTagName("action").item(0);
+                        String contentType = app.getAttribute("name");
+                        String extension = action.getAttribute("ext");
+                        String actionName = action.getAttribute("name");
+                        String urlSrc = action.getAttribute("urlsrc");
 
-            for (int i = 0; i < actions.getLength(); i++) {
-                Element app = (Element) actions.item(i);
-                Element action = (Element) app.getElementsByTagName("action").item(0);
-                String contentType = app.getAttribute("name");
-                String extension = action.getAttribute("ext");
-                String actionName = action.getAttribute("name");
-                String urlSrc = action.getAttribute("urlsrc");
+                        JsonObject actionObject = new JsonObject()
+                                .put("content-type", contentType)
+                                .put("extension", extension)
+                                .put("action", actionName)
+                                .put("url", urlSrc);
 
-                JsonObject actionObject = new JsonObject()
-                        .put("content-type", contentType)
-                        .put("extension", extension)
-                        .put("action", actionName)
-                        .put("url", urlSrc);
+                        Future<JsonObject> future = Future.future();
+                        futures.add(future);
+                        MongoDb.getInstance().save(DISCOVER_COLLECTION, actionObject, FutureHelper.getFutureHandler(future));
+                    }
 
-                Future<JsonObject> future = Future.future();
-                futures.add(future);
-                MongoDb.getInstance().save(DISCOVER_COLLECTION, actionObject, FutureHelper.getFutureHandler(future));
-            }
-
-            CompositeFuture.all(futures).setHandler(event -> handler.handle(event.succeeded()));
+                    CompositeFuture.all(futures).setHandler(event -> handler.handle(event.succeeded()));
+                } else {
+                    handler.handle(false);
+                }
+            });
 
         } catch (ParserConfigurationException | SAXException | IOException e) {
             log.error("[WopiHelper@parseDiscover] An error occurred while parsing discovery file", e);
