@@ -122,6 +122,6 @@ export const mainController = ng.controller('MainController', ['$scope',
             const message = {
                 id: 'lool@resync'
             };
-            window.opener.postMessage(JSON.stringify(message), window);
+            window.opener.postMessage(JSON.stringify(message), window.location.origin);
         }
     }]);

@@ -69,7 +69,7 @@ export const create = {
                 id: 'lool@getFolder'
             };
             this.eventer.once('lool@getFolderResponse', (data) => loolDocument.folder = data.folderId);
-            window.postMessage(JSON.stringify(event), window);
+            window.postMessage(JSON.stringify(event), window.location.origin);
         },
         createDocument: function (e: Event) {
             e.preventDefault();
