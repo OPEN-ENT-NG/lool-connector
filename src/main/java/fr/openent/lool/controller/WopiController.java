@@ -9,6 +9,7 @@ import fr.openent.lool.service.Impl.DefaultDocumentService;
 import fr.openent.lool.service.Impl.DefaultFileService;
 import fr.openent.lool.utils.Actions;
 import fr.openent.lool.utils.Bindings;
+import fr.openent.lool.utils.Headers;
 import fr.wseduc.rs.ApiDoc;
 import fr.wseduc.rs.Delete;
 import fr.wseduc.rs.Get;
@@ -59,7 +60,7 @@ public class WopiController extends ControllerHelper {
                             .put("OwnerId", document.getString("owner"))
                             .put("UserId", token.getUser())
                             .put("UserFriendlyName", token.getDisplayName())
-                            .put("Version", 34)
+                            .put("Ver.sion", 34)
                             .put("DisableCopy", config.getBoolean("DisableCopy", true))
                             .put("DisablePrint", config.getBoolean("DisablePrint", false))
                             .put("DisableExport", config.getBoolean("DisableExport", false))
@@ -103,9 +104,10 @@ public class WopiController extends ControllerHelper {
     @Post("/wopi/files/:id/contents")
     public void putFile(HttpServerRequest request) {
         request.pause();
-        boolean isAutoSave = Boolean.parseBoolean(request.getHeader("X-LOOL-WOPI-IsAutosave"));
+        boolean isAutoSave = Boolean.parseBoolean(request.getHeader(Headers.AUTO_SAVE.toString()));
+        boolean isExitSave = request.headers().contains(Headers.EXIT_SAVE.toString()) && Boolean.parseBoolean(request.headers().get(Headers.EXIT_SAVE.toString()));
         Lool.wopiHelper.validateToken(request.params().get("access_token"), request.params().get("id"), Bindings.CONTRIB.toString(), validation -> {
-            if (!validation.getBoolean("valid")) {
+            if (!validation.getBoolean("valid") && !isExitSave) {
                 unauthorized(request);
                 return;
             }
@@ -131,8 +133,15 @@ public class WopiController extends ControllerHelper {
                             }
                         };
 
-                        if (isAutoSave) {
+                        if (isAutoSave || isExitSave) {
                             documentService.updateRevisionId(request.getParam("id"), storageBody.getString("_id"), updateHandler);
+                            if (isExitSave) {
+                                Lool.wopiHelper.deleteToken(token.getId(), either -> {
+                                    if (either.isLeft()) {
+                                        log.error("Failed to delete token on exit save");
+                                    }
+                                });
+                            }
                         } else {
                             documentService.update(request.getParam("id"), storageBody.getString("_id"), storageBody.getJsonObject("metadata"), updateHandler);
                             TraceHelper.add(Actions.NEW_VERSION.name(), token.getUser(), token.getDocument(), TraceHelper.getFileExtension(document.getString("name")));
@@ -147,13 +156,13 @@ public class WopiController extends ControllerHelper {
 
     @Delete("/wopi/documents/:id/tokens/:token")
     @SecuredAction(value = "", type = ActionType.AUTHENTICATED)
-    public void deleteToken(HttpServerRequest request) {
+    public void invalidateToken(HttpServerRequest request) {
         String documentId = request.getParam("id");
         String accessToken = request.getParam("token");
         UserUtils.getUserInfos(eb, request, user -> {
             Lool.wopiHelper.isUserToken(user.getUserId(), accessToken, documentId, isUserToken -> {
                 if (isUserToken) {
-                    Lool.wopiHelper.deleteToken(accessToken, defaultResponseHandler(request));
+                    Lool.wopiHelper.invalidateToken(accessToken, defaultResponseHandler(request));
                 } else {
                     unauthorized(request);
                 }
@@ -165,6 +174,6 @@ public class WopiController extends ControllerHelper {
     @ApiDoc("Delete token based on beacon api")
     @SecuredAction(value = "", type = ActionType.AUTHENTICATED)
     public void deleteTokenWithBeacon(HttpServerRequest request) {
-        deleteToken(request);
+        invalidateToken(request);
     }
 }

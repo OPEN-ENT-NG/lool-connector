@@ -21,6 +21,7 @@ public class Token {
     private String displayName;
     private final JsonObject date;
     private String filename;
+    private boolean valid;
 
     public Token(EventBus eb, HttpServerRequest request, Handler<Either<String, Token>> handler) {
         this.document = request.getParam("id");
@@ -56,6 +57,7 @@ public class Token {
         this.sessionId = object.getString("sessionId");
         this.displayName = object.getString("displayName");
         this.date = object.getJsonObject("date");
+        this.valid = object.getBoolean("valid", true);
     }
 
     public String getUser() {
@@ -94,5 +96,9 @@ public class Token {
 
     public String getFilename() {
         return filename;
+    }
+
+    public boolean isValid() {
+        return valid;
     }
 }

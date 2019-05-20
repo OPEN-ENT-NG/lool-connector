@@ -1,0 +1,1 @@
+db.getCollection('wopi_token').createIndex({date: 1}, {expireAfterSeconds: 86400});

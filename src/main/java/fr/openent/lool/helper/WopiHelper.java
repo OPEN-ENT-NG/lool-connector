@@ -229,6 +229,10 @@ public class WopiHelper {
                     return;
                 }
                 Token token = new Token(tokenEvent.right().getValue());
+                if (!token.isValid()) {
+                    handler.handle(new JsonObject().put("valid", false).put("token", tokenEvent.right().getValue()));
+                    return;
+                }
                 UserUtils.getSession(eb, token.getSessionId(), session -> {
                     if (session == null || !token.getUser().equals(session.getString("userId"))) {
                         handler.handle(new JsonObject().put("valid", false).put("err", session == null ? "Session not found" : "Invalid user"));
@@ -362,6 +366,28 @@ public class WopiHelper {
                 .put("_id", token);
 
         MongoDb.getInstance().delete(TOKEN_COLLECTION, matcher, message -> handler.handle(Utils.validResult(message)));
+    }
+
+    /**
+     * Invalid given token
+     *
+     * @param token   Token to invalid
+     * @param handler Function handler returning data
+     */
+    public void invalidateToken(String token, Handler<Either<String, JsonObject>> handler) {
+        JsonObject matcher = new JsonObject()
+                .put("_id", token);
+        MongoDb.getInstance().findOne(TOKEN_COLLECTION, matcher, message -> {
+            Either<String, JsonObject> either = Utils.validResult(message);
+            if (either.isLeft()) {
+                handler.handle(new Either.Left<>("Failed to retrieve token"));
+                return;
+            }
+
+            JsonObject object = either.right().getValue();
+            object.put("valid", false);
+            MongoDb.getInstance().update(TOKEN_COLLECTION, matcher, object, messageUpdate -> handler.handle(Utils.validResult(messageUpdate)));
+        });
     }
 
     public JsonObject getConfig() {
