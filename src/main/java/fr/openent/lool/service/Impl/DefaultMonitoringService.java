@@ -31,7 +31,9 @@ public class DefaultMonitoringService implements MonitoringService {
                 .put("_id", "$_id")
                 .put("filename", new JsonObject().put("$arrayElemAt", arrayElemAt))
                 .put("users", "$users");
-        pipeline.add(new JsonObject().put("$match", new JsonObject()))
+        JsonObject matcher = new JsonObject()
+                .put("valid", new JsonObject().put("$exists", false));
+        pipeline.add(new JsonObject().put("$match", matcher))
                 .add(new JsonObject().put("$group", group))
                 .add(new JsonObject().put("$project", project));
         MongoDb.getInstance().command(aggregation.toString(), message -> {
@@ -48,7 +50,9 @@ public class DefaultMonitoringService implements MonitoringService {
 
     @Override
     public void countUsers(Handler<Either<String, JsonObject>> handler) {
-        MongoDb.getInstance().count("wopi_token", new JsonObject(), message -> handler.handle(Utils.validResult(message)));
+        JsonObject matcher = new JsonObject()
+                .put("valid", new JsonObject().put("$exists", false));
+        MongoDb.getInstance().count("wopi_token", matcher, message -> handler.handle(Utils.validResult(message)));
     }
 
     @Override
