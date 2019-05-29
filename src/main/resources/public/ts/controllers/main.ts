@@ -1,4 +1,4 @@
-import {Behaviours, moment, ng, template, workspace} from 'entcore';
+import {angular, Behaviours, moment, ng, template, workspace} from 'entcore';
 import http from "axios";
 
 declare let window: any;
@@ -124,4 +124,6 @@ export const mainController = ng.controller('MainController', ['$scope',
             };
             window.opener.postMessage(JSON.stringify(message), window.location.origin);
         }
+
+        angular.element(document).ready(() => (document.getElementById("loleafletform_viewer") as HTMLFormElement).submit());
     }]);
