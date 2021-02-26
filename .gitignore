@@ -12,3 +12,5 @@ src/main/resources/view
 src/main/resources/public/dist
 src/main/resources/public/js
 rev-manifest.json
+node_modules
+/src/main/resources/public/template/entcore/
