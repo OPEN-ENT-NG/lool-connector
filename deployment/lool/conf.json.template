@@ -16,7 +16,7 @@
         "mode" : "${mode}",
         "entcore.port" : 8009,
         "lool-config": {
-            "DisableCopy": true,
+            "DisableCopy": false,
             "DisablePrint": false,
             "DisableExport": false,
             "HideExportOption": false,
