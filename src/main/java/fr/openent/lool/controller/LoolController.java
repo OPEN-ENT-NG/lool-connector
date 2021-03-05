@@ -235,14 +235,14 @@ public class LoolController extends ControllerHelper {
             String filePath = path + "template." + type;
             String filename = request.getParam("name") + "." + type;
             String folder = request.getParam("folder");
-            String contentType;
-            try {
-                contentType = Files.probeContentType(Paths.get(filePath));
-            } catch (IOException e) {
-                log.error("[LoolController@createDocumentFromTemplate] Failed to read template." + type + " content type", e);
+            String contentType = getContentType(type, filePath);
+
+            if (contentType == null) {
+                log.error("[LoolController@createDocumentFromTemplate] Failed to read contentType. " + type);
                 renderError(request);
                 return;
             }
+
             vertx.fileSystem().readFile(filePath, readEvent -> {
                 if (readEvent.succeeded()) {
                     Buffer fileBuffer = readEvent.result();
@@ -273,7 +273,36 @@ public class LoolController extends ControllerHelper {
                 }
             });
         });
+    }
 
+    private String getContentType(String type, String filePath) {
+        String contentType;
+        try {
+            contentType = Files.probeContentType(Paths.get(filePath));
+        } catch (IOException e) {
+            log.error("[LoolController@getContentType] Failed to read template." + type + " content type", e);
+            return null;
+        }
+
+        if (contentType == null) {
+            switch (type) {
+                case "odp":
+                    contentType = "application/vnd.oasis.opendocument.presentation";
+                    break;
+                case "odt":
+                    contentType = "application/vnd.oasis.opendocument.text";
+                    break;
+                case "ods":
+                    contentType = "application/vnd.oasis.opendocument.spreadsheet";
+                    break;
+                case "odg":
+                    contentType = "application/vnd.oasis.opendocument.graphics";
+                    break;
+                default:
+                    return null;
+            }
+        }
+        return contentType;
     }
 
     public void cleanDocumentsToken(Handler<Boolean> handler) {
