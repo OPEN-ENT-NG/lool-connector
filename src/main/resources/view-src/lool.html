@@ -20,7 +20,9 @@
       method="post">
     <input type="hidden" name="access_token" value="{{access-token}}">
 </form>
+
 <iframe id="adapter" class="adapter" name="loleafletframe_viewer"
+        allowFullScreen="true"
         style="z-index:500; position: absolute;height: calc(100% - 64px);width:100%; top: 64px;"></iframe>
 <portal>
     <lightbox on-close="display.lightbox = false;"
