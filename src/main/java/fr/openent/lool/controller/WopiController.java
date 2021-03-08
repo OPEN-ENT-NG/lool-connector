@@ -2,6 +2,7 @@ package fr.openent.lool.controller;
 
 import fr.openent.lool.Lool;
 import fr.openent.lool.bean.Token;
+import fr.openent.lool.helper.DateHelper;
 import fr.openent.lool.helper.TraceHelper;
 import fr.openent.lool.service.DocumentService;
 import fr.openent.lool.service.FileService;
@@ -73,6 +74,7 @@ public class WopiController extends ControllerHelper {
                             .put("HidePrintOption", config.getBoolean("HidePrintOption", false))
                             .put("UserCanNotWriteRelative", config.getBoolean("UserCanNotWriteRelative", true))
                             .put("EnableOwnerTermination", config.getBoolean("EnableOwnerTermination", false))
+                            .put("LastModifiedTime", DateHelper.getDateString(document.getString("modified"), DateHelper.MONGO_DATE_FORMAT, DateHelper.SQL_FORMAT))
                             .put("UserCanWrite", canWrite);
 
                     renderJson(request, response);

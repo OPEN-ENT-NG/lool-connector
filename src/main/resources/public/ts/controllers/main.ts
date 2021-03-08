@@ -11,7 +11,8 @@ interface LoolEvent {
 
 const EVENT_RESPONSES = {
     App_LoadingStatus: 'Host_PostmessageReady',
-    UI_InsertGraphic: 'Action_InsertGraphic'
+    UI_InsertGraphic: 'Action_InsertGraphic',
+    Doc_ModifiedStatus: 'Doc_ModifiedStatus'
 };
 
 export const mainController = ng.controller('MainController', ['$scope',
@@ -51,7 +52,6 @@ export const mainController = ng.controller('MainController', ['$scope',
                 MessageId: EVENT_RESPONSES.App_LoadingStatus,
                 SendTime: Date.now().toString()
             };
-
             $scope.message.send(data);
         };
 
@@ -102,6 +102,12 @@ export const mainController = ng.controller('MainController', ['$scope',
             }
         };
 
+        /**
+         * This method will fetch ALL Wopi's API and store into your $scope.wopi_method in order to interact
+         * between angularJS methods and your wopi's iframe
+         *
+         * @param e callback() Function handler returning MessageEvent (see for multiple call wopi)
+         */
         Behaviours.applicationsBehaviours.lool.initPostMessage(function (e: MessageEvent) {
             $scope.initMessageApi(e);
             const event: LoolEvent = JSON.parse(e.data);
