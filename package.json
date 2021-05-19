@@ -13,7 +13,7 @@
     "ts-loader": "^3.3.0",
     "axios": "0.16.2",
     "core-js": "2.4.1",
-    "entcore": "3.12.0-dev.21",
+    "entcore": "3.12.0",
     "entcore-toolkit": "^1.0.1",
     "apexcharts": "^3.1.0",
     "gulp": "3.9.1",
