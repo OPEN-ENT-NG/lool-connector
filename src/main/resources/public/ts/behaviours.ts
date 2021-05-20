@@ -19,7 +19,9 @@ Behaviours.register('lool', {
     },
     capabilities,
     canBeOpenOnLool: ({metadata}): boolean => {
-        return metadata.extension in capabilities && metadata["content-type"] === capabilities[metadata.extension];
+        return metadata.extension !== 'odg' &&
+            metadata.extension in capabilities &&
+            metadata["content-type"] === capabilities[metadata.extension];
     },
     getCapabilities: async function () {
         try {

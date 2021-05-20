@@ -1,7 +1,7 @@
 import {Eventer} from 'entcore-toolkit';
 import {idiom as lang} from 'entcore';
 
-export const extensions = ['odt', 'odp', 'ods', 'odg'];
+export const extensions = ['odt', 'odp', 'ods'];
 export const initPostMessage = (callback) => {
     const eventMethod = window.addEventListener ? 'addEventListener' : 'attachEvent';
     const eventer = window[eventMethod];
