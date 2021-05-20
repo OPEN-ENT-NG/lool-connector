@@ -1,5 +1,8 @@
 .sniplet-create {
   .document-type-list {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
     .document-type {
       label {
         height: 100px;
