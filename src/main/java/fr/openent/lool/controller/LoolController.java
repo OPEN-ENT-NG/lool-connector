@@ -30,6 +30,7 @@ import org.entcore.common.bus.WorkspaceHelper;
 import org.entcore.common.controller.ControllerHelper;
 import org.entcore.common.events.EventStore;
 import org.entcore.common.events.EventStoreFactory;
+import org.entcore.common.http.filter.ResourceFilter;
 import org.entcore.common.storage.Storage;
 import org.entcore.common.user.UserUtils;
 
@@ -59,6 +60,13 @@ public class LoolController extends ControllerHelper {
         this.workspaceHelper = new WorkspaceHelper(eb, storage);
     }
 
+    @Get("")
+    @ApiDoc("Render view")
+    @SecuredAction("view")
+    public void render(HttpServerRequest request) {
+        renderView(request, new JsonObject(), "lool-home.html", null);
+    }
+
     @Get("/documents/:id/open")
     @ApiDoc("Open document in Libre Office Online")
     @SecuredAction("open.file")
@@ -81,7 +89,7 @@ public class LoolController extends ControllerHelper {
                                             .put("document-id", token.getDocument())
                                             .put("access-token", token.getId())
                                             .put("resync", request.params().contains("resync") ? request.getParam("resync") : false);
-                                    renderView(request, params, "lool.html", null);
+                                    renderView(request, params, "lool-doc.html", null);
                                     eventStore.createAndStoreEvent(Actions.ACCESS.name(), request);
                                     TraceHelper.add(Actions.ACCESS.name(), token.getUser(), token.getDocument(), TraceHelper.getFileExtension(document.getString("name")));
                                 } else {

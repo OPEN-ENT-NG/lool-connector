@@ -1,4 +1,4 @@
-import {angular, Behaviours, moment, ng, template, workspace} from 'entcore';
+import {angular, Behaviours, moment, ng, template, idiom, workspace} from 'entcore';
 import http from "axios";
 
 declare let window: any;
@@ -15,8 +15,9 @@ const EVENT_RESPONSES = {
     Doc_ModifiedStatus: 'Doc_ModifiedStatus'
 };
 
-export const mainController = ng.controller('MainController', ['$scope',
-    ($scope) => {
+export const mainController = ng.controller('MainController', ['$scope', 'route',
+    ($scope, route) => {
+        $scope.lang = idiom;
         $scope.documentId = window.documentId;
         $scope.message = {
             origin: null,
@@ -65,7 +66,7 @@ export const mainController = ng.controller('MainController', ['$scope',
             $scope.fromEvent.beforeunload = false;
             const url = `/lool/wopi/documents/${window.documentId}/tokens/${window.accessToken}`;
             if (navigator.sendBeacon) {
-                navigator.sendBeacon(url, {})
+                navigator.sendBeacon(url, new Blob())
             } else {
                 http.delete(url);
             }
@@ -132,4 +133,13 @@ export const mainController = ng.controller('MainController', ['$scope',
         }
 
         angular.element(document).ready(() => (document.getElementById("loleafletform_viewer") as HTMLFormElement).submit());
+
+
+        // Routing
+
+        route({
+            home: () => {
+                template.open('main', 'home');
+            }
+        });
     }]);

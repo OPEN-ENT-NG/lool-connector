@@ -1,0 +1,49 @@
+<div ng-controller="HomeController as vm">
+    <div class="row cell">
+        <h1><i18n>lool.title.full</i18n></h1>
+    </div>
+
+    <div class="row">
+        <div class="home">
+            <!-- Files creation infos -->
+            <div class="data">
+                <div class="filename">
+                    <i18n>lool.create.choose.name</i18n>
+                    <span class="horizontal-spacing"><input type="text" ng-model="vm.newDocument.name"></span>
+                    <div class="warning" translate content="lool.create.warning"
+                         ng-if="vm.newDocument.name === undefined || vm.newDocument.name.trim() === '' && vm.display.warning">
+                    </div>
+                </div>
+
+                <div class="folders">
+                    <i18n>lool.create.choose.folder</i18n>
+                    <folder-tree tree-props="vm.listFolders"></folder-tree>
+                </div>
+
+                <div class="type doc-list">
+                    <h2><i18n>lool.create.choose.type</i18n></h2>
+                    <div class="row document-type-list vertical-spacing-six">
+                        <div ng-repeat="type in vm.documentTypeList" class="document-type three cell"
+                             ng-class="{selected : hover}" ng-mouseenter="hover = true" ng-mouseleave="hover = false"
+                             ng-click="vm.createDocument($event, type)">
+                            <label class="eleven">
+                                <span>
+                                    <span class="text [[type.extension]]">
+                                            [[lang.translate('lool.sniplet.create-document.type.' + type.extension)]]
+                                    </span>
+                                    <input type="radio" value="[[type.extension]]" name="file-type"
+                                           class="zero-desktop zero-mobile">
+                                </span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- Decorative image -->
+            <div class="image zero-mobile">
+                <img src="/lool/public/img/waiting.svg"/>
+            </div>
+
+        </div>
+    </div>
+</div>

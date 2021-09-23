@@ -5,12 +5,12 @@
     "declaration": false,
     "moduleResolution": "node",
     "sourceMap": true,
-    "strict": true,
     "noImplicitAny": false,
     "lib": [
       "es2015",
       "dom"
-    ]
+    ],
+    "types": ["jquery", "core-js"]
   },
   "exclude": [
     "build",

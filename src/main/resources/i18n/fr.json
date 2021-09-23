@@ -1,5 +1,6 @@
 {
   "lool.title": "Lool",
+  "lool.title.full": "Libre Office Online",
   "lool.notify.saved": "La donnée a été sauvegardée",
   "lool.notify.modified": "La donnée a été modifiée",
   "lool.notify.deleted": "La donnée a été supprimée",
@@ -12,18 +13,6 @@
   "lool.contrib": "Contribution",
   "lool.read": "Lecture",
   "unsetImage": "Supprimer l'image",
-  "group.Teacher": "Tous les enseignants du groupe {0}.",
-  "group.Personnel": "Tous les personnels du groupe {0}.",
-  "group.Student": "Tous les élèves du groupe {0}.",
-  "group.Relative": "Tous les parents du groupe {0}.",
-  "group.school.Teacher": "Tous les enseignants de l'{0}.",
-  "group.school.Personnel": "Tous les personnels de l'{0}.",
-  "group.school.Student": "Tous les élèves de l'{0}.",
-  "group.school.Relative": "Tous les parents de l'{0}.",
-  "group.class.Teacher": "Tous les enseignants de la classe {0}.",
-  "group.class.Personnel": "Tous les personnels de la classe {0}.",
-  "group.class.Student": "Tous les élèves de la classe {0}.",
-  "group.class.Relative": "Tous les parents de la classe {0}.",
   "title": "Titre",
   "from": "De",
   "date": "Date",
@@ -51,6 +40,13 @@
   "lool.file": "Fichier",
   "lool.user.number": "Nombre d'utilisateurs",
   "lool.other": "autres",
+
+  "lool.create.choose.name": "Nom du fichier",
+  "lool.create.choose.folder": "Choisissez le dossier cible pour enregistrer votre document.",
+  "lool.create.choose.type": "Choisissez le type de document que vous souhaitez créer.",
+  "lool.create.warning": "Veuillez renseigner un nom de fichier avant de créer votre document.",
+  "lool.create.failed.loading": "Erreur lors de la récupération des dossiers",
+
   "lool.sniplet.create-document.title": "Créer un document",
   "lool.sniplet.create-document.description": "Créer un document Libre Office et l'ajouter dans l'espace documentaire",
   "lool.sniplet.create-document.button.placeholder": "Créer un document",
@@ -63,5 +59,20 @@
   "lool.sniplet.create-document.validation": "Valider",
   "lool.sniplet.create-document.step.1": "Type de fichier",
   "lool.sniplet.create-document.step.2": "Nom",
-  "lool.sniple.create-document.filename": "Nom du fichier"
+  "lool.sniple.create-document.filename": "Nom du fichier",
+
+
+  "workspace.myDocuments": "Documents personnels",
+  "group.Teacher": "Tous les enseignants du groupe {0}.",
+  "group.Personnel": "Tous les personnels du groupe {0}.",
+  "group.Student": "Tous les élèves du groupe {0}.",
+  "group.Relative": "Tous les parents du groupe {0}.",
+  "group.school.Teacher": "Tous les enseignants de l'{0}.",
+  "group.school.Personnel": "Tous les personnels de l'{0}.",
+  "group.school.Student": "Tous les élèves de l'{0}.",
+  "group.school.Relative": "Tous les parents de l'{0}.",
+  "group.class.Teacher": "Tous les enseignants de la classe {0}.",
+  "group.class.Personnel": "Tous les personnels de la classe {0}.",
+  "group.class.Student": "Tous les élèves de la classe {0}.",
+  "group.class.Relative": "Tous les parents de la classe {0}."
 }
