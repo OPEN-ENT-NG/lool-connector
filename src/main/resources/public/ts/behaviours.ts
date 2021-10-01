@@ -1,6 +1,6 @@
 import http from 'axios';
 import {Behaviours} from 'entcore';
-import {capabilities, create, extensions, initPostMessage} from './sniplets/create';
+import {capabilities, create, drawExtensions, extensions, initPostMessage} from './sniplets/create';
 
 console.log('lool behaviours');
 
@@ -19,7 +19,7 @@ Behaviours.register('lool', {
     },
     capabilities,
     canBeOpenOnLool: ({metadata}): boolean => {
-        return metadata.extension !== 'odg' &&
+        return drawExtensions.indexOf(metadata.extension) == -1 &&
             metadata.extension in capabilities &&
             metadata["content-type"] === capabilities[metadata.extension];
     },

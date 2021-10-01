@@ -2,6 +2,9 @@ import {Eventer} from 'entcore-toolkit';
 import {idiom as lang} from 'entcore';
 
 export const extensions = ['odt', 'odp', 'ods'];
+export const drawExtensions = ['bmp','cdr','cmx','dxf','emf','eps','fodg','gif','jpe','jpeg','jpg','met','odg','otg',
+    'pbm','pcd','pcx','pdf','pgm','png','ppm','psd','pub','ras','sda','sgf','sgv','svg','std','svm','sxd','tga','tif',
+    'tiff','vsd','vdx','vsdm','vsdx','vst','wmf','xbm','xpm'];
 export const initPostMessage = (callback) => {
     const eventMethod = window.addEventListener ? 'addEventListener' : 'attachEvent';
     const eventer = window[eventMethod];
