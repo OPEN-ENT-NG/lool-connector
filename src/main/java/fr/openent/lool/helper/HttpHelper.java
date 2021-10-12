@@ -5,7 +5,7 @@ import io.vertx.core.http.HttpClient;
 import io.vertx.core.http.HttpClientOptions;
 
 import java.io.UnsupportedEncodingException;
-import java.net.URI;
+import java.net.URL;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 
@@ -22,14 +22,14 @@ public class HttpHelper {
      * @param uri URI used for Http client
      * @return Http client
      */
-    public HttpClient generateHttpClient(URI uri) {
+    public HttpClient generateHttpClient(URL uri) {
         HttpClientOptions options = new HttpClientOptions()
                 .setDefaultHost(uri.getHost())
 //                .setDefaultPort("https".equals(uri.getScheme()) ? 9980 : 80)
-                .setDefaultPort("https".equals(uri.getScheme()) ? 443 : 80)
+                .setDefaultPort("https".equals(uri.getProtocol()) ? 443 : 80)
                 .setVerifyHost(false)
                 .setTrustAll(true)
-                .setSsl("https".equals(uri.getScheme()))
+                .setSsl("https".equals(uri.getProtocol()))
                 .setKeepAlive(true);
 
         return vertx.createHttpClient(options);

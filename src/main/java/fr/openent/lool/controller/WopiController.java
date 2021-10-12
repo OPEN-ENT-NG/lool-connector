@@ -1,9 +1,9 @@
 package fr.openent.lool.controller;
 
-import fr.openent.lool.Lool;
 import fr.openent.lool.bean.Token;
 import fr.openent.lool.helper.DateHelper;
 import fr.openent.lool.helper.TraceHelper;
+import fr.openent.lool.provider.Wopi;
 import fr.openent.lool.service.DocumentService;
 import fr.openent.lool.service.FileService;
 import fr.openent.lool.service.Impl.DefaultDocumentService;
@@ -43,40 +43,31 @@ public class WopiController extends ControllerHelper {
     public void checkFileInfo(HttpServerRequest request) {
         String loolToken = request.params().get("access_token");
         String documentId = request.params().get("id");
-        Lool.wopiHelper.validateToken(loolToken, documentId, Bindings.READ.toString(), validationObject -> {
-            if (!validationObject.getBoolean("valid")) {
+        Wopi.getInstance().helper().validateToken(loolToken, documentId, Bindings.READ.toString(), validationObject -> {
+            if (Boolean.FALSE.equals(validationObject.getBoolean("valid"))) {
                 unauthorized(request);
                 return;
             }
+
             Token token = new Token(validationObject.getJsonObject("token"));
-            Lool.wopiHelper.userCanWrite(token.getSessionId(), token.getDocument(), canWrite -> documentService.get(request.getParam("id"), event -> {
+            Wopi.getInstance().helper().userCanWrite(token.getSessionId(), token.getDocument(), canWrite -> documentService.get(request.getParam("id"), event -> {
                 if (event.isRight()) {
                     JsonObject document = event.right().getValue();
                     JsonObject metadata = document.getJsonObject("metadata");
-                    //TODO get version revision from document
-                    JsonObject config = Lool.wopiHelper.getConfig();
+
+                    // Create wopi response config
                     JsonObject response = new JsonObject()
                             .put("BaseFileName", document.getString("name"))
                             .put("Size", metadata.getInteger("size"))
                             .put("OwnerId", document.getString("owner"))
                             .put("UserId", token.getUser())
                             .put("UserFriendlyName", token.getDisplayName())
-                            .put("Ver.sion", 34)
-                            .put("DisableCopy", config.getBoolean("DisableCopy", true))
-                            .put("DisablePrint", config.getBoolean("DisablePrint", false))
-                            .put("DisableExport", config.getBoolean("DisableExport", false))
-                            .put("HideExportOption", config.getBoolean("HideExportOption", false))
-                            .put("DisableInactiveMessages", config.getBoolean("DisableInactiveMessages", false))
-                            .put("HideUserList", config.getBoolean("HideUserList", false))
-                            .put("HideSaveOption", config.getBoolean("HideSaveOption", false))
-                            .put("EnableShare", config.getBoolean("EnableShare", false))
-                            .put("EnableInsertRemoteImage", config.getBoolean("EnableInsertRemoteImage", true))
-                            .put("HidePrintOption", config.getBoolean("HidePrintOption", false))
-                            .put("UserCanNotWriteRelative", config.getBoolean("UserCanNotWriteRelative", true))
-                            .put("EnableOwnerTermination", config.getBoolean("EnableOwnerTermination", false))
+                            .put("Version", 34) //TODO get version revision from document
                             .put("LastModifiedTime", DateHelper.getDateString(document.getString("modified"), DateHelper.MONGO_DATE_FORMAT, DateHelper.SQL_FORMAT))
                             .put("UserCanWrite", canWrite);
 
+                    // Merge server capabilities into wopi response config
+                    response.mergeIn(new JsonObject(Wopi.getInstance().config().serverCapabilities()));
                     renderJson(request, response);
                 } else {
                     badRequest(request);
@@ -108,8 +99,8 @@ public class WopiController extends ControllerHelper {
         request.pause();
         boolean isAutoSave = Boolean.parseBoolean(request.getHeader(Headers.AUTO_SAVE.toString()));
         boolean isExitSave = request.headers().contains(Headers.EXIT_SAVE.toString()) && Boolean.parseBoolean(request.headers().get(Headers.EXIT_SAVE.toString()));
-        Lool.wopiHelper.validateToken(request.params().get("access_token"), request.params().get("id"), Bindings.CONTRIB.toString(), validation -> {
-            if (!validation.getBoolean("valid") && !isExitSave) {
+        Wopi.getInstance().helper().validateToken(request.params().get("access_token"), request.params().get("id"), Bindings.CONTRIB.toString(), validation -> {
+            if (Boolean.FALSE.equals(validation.getBoolean("valid")) && !isExitSave) {
                 unauthorized(request);
                 return;
             }
@@ -138,7 +129,7 @@ public class WopiController extends ControllerHelper {
                         if (isAutoSave || isExitSave) {
                             documentService.updateRevisionId(request.getParam("id"), storageBody.getString("_id"), updateHandler);
                             if (isExitSave) {
-                                Lool.wopiHelper.deleteToken(token.getId(), either -> {
+                                Wopi.getInstance().helper().deleteToken(token.getId(), either -> {
                                     if (either.isLeft()) {
                                         log.error("Failed to delete token on exit save");
                                     }
@@ -159,17 +150,20 @@ public class WopiController extends ControllerHelper {
     @Delete("/wopi/documents/:id/tokens/:token")
     @SecuredAction(value = "", type = ActionType.AUTHENTICATED)
     public void invalidateToken(HttpServerRequest request) {
+        if (Boolean.FALSE.equals(Wopi.getInstance().provider().revokeToken())) {
+            ok(request);
+            return;
+        }
+
         String documentId = request.getParam("id");
         String accessToken = request.getParam("token");
-        UserUtils.getUserInfos(eb, request, user -> {
-            Lool.wopiHelper.isUserToken(user.getUserId(), accessToken, documentId, isUserToken -> {
-                if (isUserToken) {
-                    Lool.wopiHelper.invalidateToken(accessToken, defaultResponseHandler(request));
-                } else {
-                    unauthorized(request);
-                }
-            });
-        });
+        UserUtils.getUserInfos(eb, request, user -> Wopi.getInstance().helper().isUserToken(user.getUserId(), accessToken, documentId, isUserToken -> {
+            if (Boolean.TRUE.equals(isUserToken)) {
+                Wopi.getInstance().helper().invalidateToken(accessToken, defaultResponseHandler(request));
+            } else {
+                unauthorized(request);
+            }
+        }));
     }
 
     @Post("/wopi/documents/:id/tokens/:token")

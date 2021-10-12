@@ -16,7 +16,7 @@
     </head>
 
     <body ng-controller="MainController" style="height: 100%; width: 100%">
-        <form action="{{lool-redirection}}" id="loleafletform_viewer" target="loleafletframe_viewer"
+        <form action="{{{lool-redirection}}}" id="loleafletform_viewer" target="loleafletframe_viewer"
               method="post">
             <input type="hidden" name="access_token" value="{{access-token}}">
         </form>

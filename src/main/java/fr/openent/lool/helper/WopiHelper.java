@@ -2,15 +2,17 @@ package fr.openent.lool.helper;
 
 import com.mongodb.DBObject;
 import com.mongodb.QueryBuilder;
+import fr.openent.lool.bean.ActionURL;
 import fr.openent.lool.bean.Token;
+import fr.openent.lool.provider.Wopi;
 import fr.openent.lool.utils.Bindings;
 import fr.wseduc.mongodb.MongoDb;
 import fr.wseduc.mongodb.MongoQueryBuilder;
 import fr.wseduc.webutils.Either;
 import fr.wseduc.webutils.Utils;
-import io.vertx.core.CompositeFuture;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
+import io.vertx.core.Promise;
 import io.vertx.core.Vertx;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.core.buffer.impl.BufferImpl;
@@ -22,44 +24,27 @@ import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
+import org.entcore.common.mongodb.MongoDbResult;
 import org.entcore.common.user.UserUtils;
-import org.w3c.dom.Document;
-import org.w3c.dom.Element;
-import org.w3c.dom.NodeList;
-import org.xml.sax.InputSource;
-import org.xml.sax.SAXException;
 
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
-import javax.xml.parsers.ParserConfigurationException;
-import java.io.IOException;
-import java.io.StringReader;
-import java.net.URI;
-import java.net.URISyntaxException;
+import java.net.MalformedURLException;
 import java.util.ArrayList;
 import java.util.List;
 
 public class WopiHelper {
 
-    private final Logger log = LoggerFactory.getLogger(WopiHelper.class);
-    private String server;
-    private HttpHelper httpHelper;
-    private HttpClient httpClient;
-    private EventBus eb;
-    private JsonObject config;
-    private final String DISCOVER_COLLECTION = "lool_discover";
-
+    private static final String DISCOVER_COLLECTION = "lool_discover";
     public static final String TOKEN_COLLECTION = "wopi_token";
 
-    public WopiHelper(Vertx vertx, String server) {
-        try {
-            this.httpHelper = new HttpHelper(vertx);
-            this.eb = vertx.eventBus();
-            this.server = server;
-            this.httpClient = httpHelper.generateHttpClient(new URI(server));
-        } catch (URISyntaxException e) {
-            log.error("[WopiHelper@contructor] Failed to create WopiHelper", e);
-        }
+    private final Logger log = LoggerFactory.getLogger(WopiHelper.class);
+    private final HttpHelper httpHelper;
+    private final HttpClient httpClient;
+    private final EventBus eb;
+
+    public WopiHelper(Vertx vertx) {
+        this.httpHelper = new HttpHelper(vertx);
+        this.eb = vertx.eventBus();
+        this.httpClient = httpHelper.generateHttpClient(Wopi.getInstance().config().server());
     }
 
     /**
@@ -95,7 +80,7 @@ public class WopiHelper {
      * @param action      Optional. User action
      * @param handler     Function handler returning data
      */
-    public void getActionUrl(String contentType, String action, Handler<Either<String, String>> handler) {
+    public void getActionUrl(String contentType, String action, Handler<Either<String, ActionURL>> handler) {
         if (contentType == null) {
             handler.handle(new Either.Left<>("content-type  must be provided"));
             return;
@@ -113,7 +98,13 @@ public class WopiHelper {
                     handler.handle(new Either.Left<>("[WopiHelper@getActionUrl] Content-type doesn't match Libre Office Online capabilities"));
                     return;
                 }
-                handler.handle(new Either.Right<>(record.getJsonObject("result").getString("url")));
+
+                try {
+                    handler.handle(new Either.Right<>(ActionURL.parse(record.getJsonObject("result").getString("url"))));
+                } catch (MalformedURLException e) {
+                    log.error(e.getMessage());
+                    handler.handle(new Either.Left<>("[WopiHelper@getActionUrl] Failed to parse action url"));
+                }
             } else {
                 handler.handle(new Either.Left<>(event.body().getString("message")));
             }
@@ -144,10 +135,6 @@ public class WopiHelper {
         req.end();
     }
 
-    public String getServer() {
-        return server;
-    }
-
     /**
      * Parse discover file
      *
@@ -155,47 +142,15 @@ public class WopiHelper {
      * @param handler Function handler returning data
      */
     private void parseDiscover(Buffer buffer, Handler<Boolean> handler) {
-        try {
-            DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
-            DocumentBuilder builder = factory.newDocumentBuilder();
-            InputSource source = new InputSource(new StringReader(new String(buffer.getBytes())));
-            Document xml = builder.parse(source);
-            xml.getDocumentElement().normalize();
+        JsonArray actions = Wopi.getInstance().provider().parseDiscovery(buffer);
+        MongoDb.getInstance().delete(DISCOVER_COLLECTION, new JsonObject(), MongoDbResult.validResultHandler(delete -> {
+            if (delete.isLeft()) {
+                handler.handle(Boolean.FALSE);
+                return;
+            }
 
-            NodeList actions = xml.getElementsByTagName("app");
-            List<Future> futures = new ArrayList<>();
-
-            MongoDb.getInstance().delete(DISCOVER_COLLECTION, new JsonObject(), deleteEvent -> {
-                if ("ok".equals(deleteEvent.body().getString("status"))) {
-                    for (int i = 0; i < actions.getLength(); i++) {
-                        Element app = (Element) actions.item(i);
-                        Element action = (Element) app.getElementsByTagName("action").item(0);
-                        String contentType = app.getAttribute("name");
-                        String extension = action.getAttribute("ext");
-                        String actionName = action.getAttribute("name");
-                        String urlSrc = action.getAttribute("urlsrc");
-
-                        JsonObject actionObject = new JsonObject()
-                                .put("content-type", contentType)
-                                .put("extension", extension)
-                                .put("action", actionName)
-                                .put("url", urlSrc);
-
-                        Future<JsonObject> future = Future.future();
-                        futures.add(future);
-                        MongoDb.getInstance().save(DISCOVER_COLLECTION, actionObject, FutureHelper.getFutureHandler(future));
-                    }
-
-                    CompositeFuture.all(futures).setHandler(event -> handler.handle(event.succeeded()));
-                } else {
-                    handler.handle(false);
-                }
-            });
-
-        } catch (ParserConfigurationException | SAXException | IOException e) {
-            log.error("[WopiHelper@parseDiscover] An error occurred while parsing discovery file", e);
-            handler.handle(false);
-        }
+            MongoDb.getInstance().insert(DISCOVER_COLLECTION, actions, MongoDbResult.validResultHandler(either -> handler.handle(either.isRight())));
+        }));
     }
 
     /**
@@ -306,11 +261,10 @@ public class WopiHelper {
     }
 
     /**
-     * Get Libre Office Online file capabilities
-     *
-     * @param handler Function handler returning data
+     * Get Wopi provider file capabilities
      */
-    public void getCapabilities(Handler<Either<String, JsonArray>> handler) {
+    public Future<JsonArray> getCapabilities() {
+        Promise<JsonArray> promise = Promise.promise();
         JsonObject query = new JsonObject();
         JsonObject sort = new JsonObject();
         JsonObject keys = new JsonObject()
@@ -319,11 +273,13 @@ public class WopiHelper {
                 .put("_id", 0);
         MongoDb.getInstance().find(DISCOVER_COLLECTION, query, sort, keys, event -> {
             if ("ok".equals(event.body().getString("status"))) {
-                handler.handle(new Either.Right<>(event.body().getJsonArray("results")));
+                promise.complete(event.body().getJsonArray("results"));
             } else {
-                handler.handle(new Either.Left<>(event.body().getString("message")));
+                promise.fail(event.body().getString("message"));
             }
         });
+
+        return promise.future();
     }
 
     /**
@@ -388,13 +344,5 @@ public class WopiHelper {
             object.put("valid", false);
             MongoDb.getInstance().update(TOKEN_COLLECTION, matcher, object, messageUpdate -> handler.handle(Utils.validResult(messageUpdate)));
         });
-    }
-
-    public JsonObject getConfig() {
-        return config;
-    }
-
-    public void setConfig(JsonObject config) {
-        this.config = config;
     }
 }

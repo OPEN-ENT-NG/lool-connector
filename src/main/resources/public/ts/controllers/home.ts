@@ -1,10 +1,9 @@
-import {ng, idiom, workspace, notify} from 'entcore';
-import {extensions, initPostMessage} from "../sniplets/create";
+import {Behaviours, idiom, ng, notify, workspace} from 'entcore';
 import {Eventer} from "entcore-toolkit";
 import {Element, Tree} from "entcore/types/src/ts/workspace/model";
 
 interface ViewModel {
-    newDocument : {
+    newDocument: {
         extension: string,
         name: string,
         folder: any
@@ -21,10 +20,15 @@ interface ViewModel {
     }
 
     $onInit(): Promise<void>;
+
     $onDestroy(): Promise<void>;
+
     initDocument(): void;
+
     createDocument(Event, string): void;
 }
+
+const BEHAVIOURS_NAME = 'lool';
 
 
 export const homeController = ng.controller('HomeController', ['$scope',
@@ -40,7 +44,6 @@ export const homeController = ng.controller('HomeController', ['$scope',
         vm.openedFolder = null;
         vm.selectedFolder = null;
         vm.documentTypeList = [];
-        vm.eventer = new Eventer();
         vm.display = {
             warning: false,
             lightbox: false
@@ -49,7 +52,8 @@ export const homeController = ng.controller('HomeController', ['$scope',
         vm.$onInit = async () : Promise<void> => {
             let trees = null;
             try {
-                trees = await workspace.v2.service.fetchTrees({ filter: "all", hierarchical: true });
+                trees = await workspace.v2.service.fetchTrees({filter: "all", hierarchical: true});
+                await Behaviours.applicationsBehaviours[BEHAVIOURS_NAME].init();
                 vm.workspaceTrees[0] = trees.filter(tree => tree.filter == "owner")[0];
                 vm.workspaceTrees[0].name = idiom.translate("workspace.myDocuments");
             } catch (err) {
@@ -85,29 +89,15 @@ export const homeController = ng.controller('HomeController', ['$scope',
                 }
             }
 
-            idiom.addBundle('/lool/i18n', () => {
-                if (vm.documentTypeList.length === 0) {
-                    for (let ext of extensions) {
-                        vm.documentTypeList.push({
-                            extension: ext,
-                            title: idiom.translate(`lool.sniplet.create-document.type.${ext}`)
-                        })
-                    }
-                }
-                vm.initDocument();
-                initPostMessage((event) => {
-                    const data = JSON.parse(event.data);
-                    if (data.id === 'lool@getFolderResponse') {
-                        vm.eventer.trigger(data.id, data);
-                        if ('folderId' in data) {
-                            vm.newDocument.folder = data.folderId;
-                        }
-                        $scope.$apply();
-                        console.info(vm.newDocument);
-                    }
-                });
-            });
+            const {templates} = Behaviours.applicationsBehaviours[BEHAVIOURS_NAME].provider;
+            for (let ext of templates) {
+                vm.documentTypeList.push({
+                    extension: ext,
+                    title: idiom.translate(`lool.sniplet.create-document.type.${ext}`)
+                })
+            }
 
+            vm.initDocument();
             $scope.$apply();
         };
 

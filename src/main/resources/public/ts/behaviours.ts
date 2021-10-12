@@ -1,8 +1,16 @@
 import http from 'axios';
 import {Behaviours} from 'entcore';
-import {capabilities, create, drawExtensions, extensions, initPostMessage} from './sniplets/create';
+import {capabilities, create, initPostMessage} from './sniplets/create';
+import {Metadata} from "./providers/Provider";
+import {ProviderFactory} from "./providers/ProviderFactory";
 
 console.log('lool behaviours');
+
+type Context = {
+    provider: string,
+    templates: Array<string>
+    capabilities: Array<Metadata>
+}
 
 Behaviours.register('lool', {
     rights: {
@@ -13,20 +21,29 @@ Behaviours.register('lool', {
         resource: {}
     },
     initPostMessage,
-    extensions,
-    init: function () {
-        return this.getCapabilities()
+    provider: null,
+    init: async function () { //FIXME Fix init issue. Use a event Listener to init sniplets
+        console.debug('Init behaviours')
+        const context: Context = await this.getWopiContext();
+        this.provider = ProviderFactory.provider(context.provider);
+        this.provider.setCapabilities(context.capabilities);
+        this.provider.setTemplates(context.templates);
+        if (this.initCallback.length > 0) {
+            console.debug('Calling init callbacks', this.initCallback);
+            this.initCallback.map(cb => cb());
+        }
+
+        console.debug(this);
     },
+    initCallback: [],
     capabilities,
-    canBeOpenOnLool: ({metadata}): boolean => {
-        return drawExtensions.indexOf(metadata.extension) == -1 &&
-            metadata.extension in capabilities &&
-            metadata["content-type"] === capabilities[metadata.extension];
+    canBeOpenOnLool: function ({metadata}): boolean {
+        return Behaviours.applicationsBehaviours['lool'].provider.canBeOpen(metadata);
     },
-    getCapabilities: async function () {
+    getWopiContext: async function (): Promise<Context> {
         try {
-            const {data} = await http.get('/lool/capabilities');
-            data.forEach((capability) => capabilities[capability.extension] = capability['content-type']);
+            const response: { data: Context } = await http.get('/lool/providers/context');
+            return response.data;
         } catch (err) {
             throw err;
         }

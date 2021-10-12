@@ -15,19 +15,26 @@
         "app-registry.port" : 8012,
         "mode" : "${mode}",
         "entcore.port" : 8009,
-        "lool-config": {
-            "DisableCopy": false,
-            "DisablePrint": false,
-            "DisableExport": false,
-            "HideExportOption": false,
-            "DisableInactiveMessages": false,
-            "HideUserList": false,
-            "HideSaveOption": false,
-            "EnableShare": false,
-            "EnableInsertRemoteImage": true,
-            "HidePrintOption": false,
-            "UserCanNotWriteRelative": true,
-            "EnableOwnerTermination": false
+        "wopi": {
+            "provider": {
+                "type": "",
+                "url": ""
+            },
+            "templates": ["odt", "odp", "ods", "odg"],
+            "server_capabilities": {
+                "DisableCopy": false,
+                "DisablePrint": false,
+                "DisableExport": false,
+                "HideExportOption": false,
+                "DisableInactiveMessages": false,
+                "HideUserList": false,
+                "HideSaveOption": false,
+                "EnableShare": false,
+                "EnableInsertRemoteImage": true,
+                "HidePrintOption": false,
+                "UserCanNotWriteRelative": true,
+                "EnableOwnerTermination": false
+            }
         }
       }
     }

@@ -1,33 +1,56 @@
 package fr.openent.lool;
 
+import fr.openent.lool.bean.WopiConfig;
 import fr.openent.lool.controller.LoolController;
 import fr.openent.lool.controller.MonitoringController;
 import fr.openent.lool.controller.WopiController;
+import fr.openent.lool.exception.InvalidWopiProviderException;
+import fr.openent.lool.exception.InvalidWopiServerException;
 import fr.openent.lool.helper.WopiHelper;
+import fr.openent.lool.provider.Wopi;
+import fr.openent.lool.provider.WopiProvider;
+import fr.openent.lool.provider.WopiProviderFactory;
 import io.vertx.core.eventbus.EventBus;
 import io.vertx.core.json.JsonObject;
 import org.entcore.common.http.BaseServer;
 import org.entcore.common.storage.Storage;
 import org.entcore.common.storage.StorageFactory;
 
+import java.net.MalformedURLException;
+import java.util.Objects;
+
 public class Lool extends BaseServer {
 
-    public static WopiHelper wopiHelper;
+    private static final int WAITING_TIME = 30000;
 
-	@Override
-	public void start() throws Exception {
-		super.start();
-        wopiHelper = new WopiHelper(vertx, config.getString("lool-server"));
-        wopiHelper.setConfig(config.getJsonObject("lool-config", new JsonObject()));
+    @Override
+    public void start() throws Exception {
+        super.start();
+
+        WopiConfig wopiConfig;
+        WopiProvider provider;
+
+        try {
+            wopiConfig = WopiConfig.from(config.getJsonObject("wopi", new JsonObject()));
+            provider = WopiProviderFactory.provider(wopiConfig.type(), wopiConfig.server());
+        } catch (MalformedURLException | NullPointerException e) {
+            throw new InvalidWopiServerException(e);
+        }
+
+        if (Objects.isNull(provider)) {
+            throw new InvalidWopiProviderException();
+        }
+
+        Wopi.getInstance().init(provider, wopiConfig).setHelper(new WopiHelper(vertx));
 
         EventBus eb = vertx.eventBus();
         Storage storage = new StorageFactory(vertx, config).getStorage();
-        LoolController loolController = new LoolController(vertx, eb, storage);
+        LoolController loolController = new LoolController(eb, storage);
         addController(loolController);
         addController(new WopiController(eb, storage));
         addController(new MonitoringController());
-        vertx.setTimer(30000, aLong -> wopiHelper.discover(status -> log.info("Libre Office Online discover " + (status ? "OK" : "KO"))));
-        vertx.setTimer(30000, timer -> wopiHelper.clearTokens(status -> log.info("Libre Office Online clear token " + (status.isRight() ? "OK" : "KO"))));
-        vertx.setTimer(30000, timer -> loolController.cleanDocumentsToken(status -> log.info("Libre Office Online document tokens " + (status ? "OK" : "KO"))));
+        vertx.setTimer(WAITING_TIME, aLong -> Wopi.getInstance().helper().discover(status -> log.info("Libre Office Online discover " + (Boolean.TRUE.equals(status) ? "OK" : "KO"))));
+        vertx.setTimer(WAITING_TIME, timer -> Wopi.getInstance().helper().clearTokens(status -> log.info("Libre Office Online clear token " + (status.isRight() ? "OK" : "KO"))));
+        vertx.setTimer(WAITING_TIME, timer -> loolController.cleanDocumentsToken(status -> log.info("Libre Office Online document tokens " + (Boolean.TRUE.equals(status) ? "OK" : "KO"))));
     }
 }
