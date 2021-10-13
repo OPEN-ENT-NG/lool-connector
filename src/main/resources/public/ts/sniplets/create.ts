@@ -22,6 +22,8 @@ let loolDocument = {
     folder: null
 };
 
+enum ButtonType { PRIMARY = 'primary', SECONDARY = 'secondary' }
+
 export const create = {
     title: 'lool.sniplet.create-document.title',
     description: 'lool.sniplet.create-document.description',
@@ -33,8 +35,12 @@ export const create = {
         document: loolDocument,
         lang,
         documentTypeList: ([] as any[]),
+        buttonType: ButtonType.SECONDARY,
+        ButtonType,
         init: function () {
             const that: any = this;
+            console.log(this);
+            this.buttonType = this.source.type;
             lang.addBundle('/lool/i18n', () => {
                 if (this.documentTypeList.length === 0) {
                     extensions.forEach((ext) => this.documentTypeList.push({

@@ -1,9 +1,16 @@
 <div class="sniplet-create">
-    <a ng-click="openLightbox()" class="classic-link">
+    <!-- Button style primary -->
+    <button class="primary-button" ng-click="openLightbox()" ng-if="buttonType === ButtonType.PRIMARY">
+        <i18n>lool.sniplet.create-document.title</i18n>
+    </button>
+
+    <!-- Button style secondary -->
+    <a ng-click="openLightbox()" class="classic-link" ng-if="buttonType === ButtonType.SECONDARY">
         <i18n>lool.sniplet.create-document.title</i18n>
     </a>
-    <lightbox on-close="lightbox.display = false;"
-              show="lightbox.display">
+
+    <!-- Lightbox displayed for only secondary button -->
+    <lightbox on-close="lightbox.display = false;" show="lightbox.display" ng-if="buttonType === ButtonType.SECONDARY">
         <div class="row">
             <h2>
                 <i18n>lool.sniplet.create-document.lightbox.title</i18n>

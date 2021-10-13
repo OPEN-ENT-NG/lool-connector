@@ -1,4 +1,8 @@
 .sniplet-create, .doc-list {
+  .primary-button {
+    width: 100%;
+  }
+
   .document-type-list {
     display: flex;
     flex-wrap: wrap;
@@ -110,33 +114,6 @@
             }
           }
         }
-      }
-    }
-  }
-}
-
-
-&.primary-button {
-  .sniplet-create {
-    display: flex;
-    flex-direction: column;
-
-    .classic-link {
-      background: #FF8500;
-      padding: 8px 18px 10px;
-      color: #fff;
-      text-transform: none;
-      font-size: 14px;
-      border-radius: 2px;
-      transition: all 250ms ease;
-      line-height: 20px;
-      box-shadow: 0 1px 1px rgba(0, 0, 0, 0.4);
-      margin-right: 2px;
-      margin-left: 2px;
-
-      &:hover {
-        background-color: #b35d00;
-        box-shadow: none;
       }
     }
   }

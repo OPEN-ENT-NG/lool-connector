@@ -1,6 +1,6 @@
-body.lool, .sniplet.lool {
-  @import 'sniplet';
+@import 'sniplet';
 
+body.lool {
   .home {
     display: grid;
     grid-template-columns: 1fr 1fr;
