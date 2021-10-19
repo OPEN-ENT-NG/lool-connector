@@ -78,19 +78,27 @@ public class WopiController extends ControllerHelper {
 
     @Get("/wopi/files/:id/contents")
     public void getFile(HttpServerRequest request) {
-        documentService.get(request.getParam("id"), event -> {
-            if (event.isRight()) {
-                JsonObject document = event.right().getValue();
-                fileService.get(document.getString("file"), buffer ->
-                        request.response()
-                                .setStatusCode(200)
-                                .putHeader("Content-Type", "application/octet-stream")
-                                .putHeader("Content-Transfer-Encoding", "Binary")
-                                .putHeader("Content-disposition", "attachment; filename=" + document.getString("name"))
-                                .end(buffer));
-            } else {
-                badRequest(request);
+        String documentId = request.getParam("id");
+        Wopi.getInstance().helper().validateToken(request.getParam("access_token"), documentId, Bindings.READ.toString(), validation -> {
+            if (Boolean.FALSE.equals(validation.getBoolean("valid"))) {
+                unauthorized(request);
+                return;
             }
+
+            documentService.get(documentId, event -> {
+                if (event.isRight()) {
+                    JsonObject document = event.right().getValue();
+                    fileService.get(document.getString("file"), buffer ->
+                            request.response()
+                                    .setStatusCode(200)
+                                    .putHeader("Content-Type", "application/octet-stream")
+                                    .putHeader("Content-Transfer-Encoding", "Binary")
+                                    .putHeader("Content-disposition", "attachment; filename=" + document.getString("name"))
+                                    .end(buffer));
+                } else {
+                    badRequest(request);
+                }
+            });
         });
     }
 
