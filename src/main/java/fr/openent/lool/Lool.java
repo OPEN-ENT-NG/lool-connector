@@ -16,7 +16,6 @@ import org.entcore.common.http.BaseServer;
 import org.entcore.common.storage.Storage;
 import org.entcore.common.storage.StorageFactory;
 
-import java.net.MalformedURLException;
 import java.util.Objects;
 
 public class Lool extends BaseServer {
@@ -33,7 +32,7 @@ public class Lool extends BaseServer {
         try {
             wopiConfig = WopiConfig.from(config.getJsonObject("wopi", new JsonObject()));
             provider = WopiProviderFactory.provider(wopiConfig.type(), wopiConfig.server());
-        } catch (MalformedURLException | NullPointerException e) {
+        } catch (NullPointerException e) {
             throw new InvalidWopiServerException(e);
         }
 
