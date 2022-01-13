@@ -8,7 +8,6 @@
     	"app-icon" : "Lool-large",
         "host": "${host}",
         "ssl" : $ssl,
-        "lool-server": "${loolServer}",
         "auto-redeploy": false,
         "userbook-host": "${host}",
         "integration-mode" : "HTTP",
@@ -20,7 +19,8 @@
                 "type": "",
                 "url": ""
             },
-            "templates": ["odt", "odp", "ods", "odg"],
+            "hour-duration-token": "",
+            "templates": ["odt", "odp", "ods"],
             "server_capabilities": {
                 "DisableCopy": false,
                 "DisablePrint": false,

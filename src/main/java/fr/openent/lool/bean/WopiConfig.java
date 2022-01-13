@@ -14,13 +14,15 @@ public class WopiConfig {
     private final URL server;
     private final Map<String, Object> serverCapabilities;
     private final List<String> templates;
+    private final Long duration_token;
 
     public WopiConfig(JsonObject wopiConfig) throws MalformedURLException {
         JsonObject provider = wopiConfig.getJsonObject("provider", new JsonObject());
         this.type = WopiProviders.valueOf(provider.getString("type", null));
         this.server = new URL(provider.getString("url", null));
         this.serverCapabilities = wopiConfig.getJsonObject("server_capabilities", new JsonObject()).getMap();
-        this.templates = wopiConfig.containsKey("templates") ? wopiConfig.getJsonArray("templates").getList() : Arrays.asList("odt", "odp", "ods", "odg");
+        this.templates = wopiConfig.containsKey("templates") ? wopiConfig.getJsonArray("templates").getList() : Arrays.asList("odt", "odp", "ods");
+        this.duration_token = wopiConfig.getLong("hour-duration-token", 10L);
     }
 
     public WopiProviders type() {
@@ -33,6 +35,10 @@ public class WopiConfig {
 
     public List<String> templates() {
         return this.templates;
+    }
+
+    public Long duration_token() {
+        return this.duration_token;
     }
 
     public Map<String, Object> serverCapabilities() {

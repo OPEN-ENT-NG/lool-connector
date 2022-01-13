@@ -3,6 +3,7 @@ package fr.openent.lool.controller;
 import fr.openent.lool.Lool;
 import fr.openent.lool.bean.ActionURL;
 import fr.openent.lool.bean.Token;
+import fr.openent.lool.bean.WopiConfig;
 import fr.openent.lool.helper.TraceHelper;
 import fr.openent.lool.provider.Wopi;
 import fr.openent.lool.service.DocumentService;
@@ -36,6 +37,10 @@ import org.entcore.common.user.UserUtils;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.sql.Timestamp;
+import java.time.Duration;
+import java.time.Instant;
+import java.util.Date;
 
 import static fr.wseduc.webutils.Utils.handlerToAsyncHandler;
 
@@ -45,15 +50,17 @@ public class LoolController extends ControllerHelper {
     private final FileService fileService;
     private final TokenService tokenService;
     private final EventStore eventStore;
-    private WorkspaceHelper workspaceHelper;
+    private final WorkspaceHelper workspaceHelper;
+    private final WopiConfig wopiConfig;
 
-    public LoolController(EventBus eb, Storage storage) {
+    public LoolController(EventBus eb, Storage storage, WopiConfig wopiConfig) {
         super();
         documentService = new DefaultDocumentService(eb, storage);
         fileService = new DefaultFileService(storage);
         tokenService = new DefaultTokenService();
         eventStore = EventStoreFactory.getFactory().getEventStore(Lool.class.getSimpleName());
         this.workspaceHelper = new WorkspaceHelper(eb, storage);
+        this.wopiConfig = wopiConfig;
     }
 
     @Get("")
@@ -80,12 +87,17 @@ public class LoolController extends ControllerHelper {
                             JsonObject document = result.right().getValue();
                             getRedirectionUrl(request, document, event -> {
                                 if (event.isRight()) {
+                                    Timestamp ts = Timestamp.from(Instant.now());
+                                    Duration d = Duration.ofHours(wopiConfig.duration_token());
+                                    long duration_token = d.toMillis();
                                     JsonObject params = new JsonObject()
-                                            .put("lool-redirection", event.right().getValue())
+                                            .put("redirection", event.right().getValue())
                                             .put("document-id", token.getDocument())
                                             .put("access-token", token.getId())
-                                            .put("resync", request.params().contains("resync") ? request.getParam("resync") : false);
-                                    renderView(request, params, "lool-doc.html", null);
+                                            .put("resync", request.params().contains("resync") ? request.getParam("resync") : false)
+                                            .put("provider-name",Wopi.getInstance().provider().type())
+                                            .put("duration-token",duration_token + ts.getTime());
+                                    renderView(request, params, "doc.html", null);
                                     eventStore.createAndStoreEvent(Actions.ACCESS.name(), request);
                                     TraceHelper.add(Actions.ACCESS.name(), token.getUser(), token.getDocument(), TraceHelper.getFileExtension(document.getString("name")));
                                 } else {

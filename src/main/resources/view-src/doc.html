@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
     <head>
-        <title>{{#i18n}}lool.title{{/i18n}}</title>
+        <title>{{{provider-name}}}</title>
         <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
         <meta name="viewport" content="initial-scale=1, maximum-scale=1">
         <script src="/lool/public/dist/entcore/ng-app.js" type="text/javascript"
@@ -12,13 +12,16 @@
             var documentId = "{{document-id}}";
             var accessToken = "{{access-token}}";
             var resync = "{{resync}}";
+            var providerName = "{{provider-name}}";
+            var durationToken = "{{duration-token}}";
         </script>
     </head>
 
     <body ng-controller="MainController" style="height: 100%; width: 100%">
-        <form action="{{{lool-redirection}}}" id="loleafletform_viewer" target="loleafletframe_viewer"
+        <form action="{{{redirection}}}" id="loleafletform_viewer" target="loleafletframe_viewer"
               method="post">
-            <input type="hidden" name="access_token" value="{{access-token}}">
+            <input name="access_token" value="{{access-token}}" type="hidden" />
+            <input name="access_token_ttl" value="{{duration-token}}" type="hidden" />
         </form>
 
         <iframe id="adapter" class="adapter" name="loleafletframe_viewer"

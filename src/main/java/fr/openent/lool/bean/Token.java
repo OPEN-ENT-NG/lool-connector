@@ -14,7 +14,7 @@ import java.util.UUID;
 import static fr.wseduc.webutils.Utils.handlerToAsyncHandler;
 
 public class Token {
-    private String _id;
+    private final String _id;
     private String user;
     private final String document;
     private final String sessionId;

@@ -13,7 +13,7 @@ import java.util.UUID;
 
 public class DefaultTokenService implements TokenService {
     private final Logger log = LoggerFactory.getLogger(DefaultTokenService.class);
-    private String TOKEN_COLLECTION = "document_token";
+    private final String TOKEN_COLLECTION = "document_token";
 
     @Override
     public void create(String documentId, String userId, Handler<Either<String, JsonObject>> handler) {

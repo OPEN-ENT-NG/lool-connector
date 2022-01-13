@@ -22,8 +22,8 @@ import java.net.URL;
 
 public abstract class WopiProvider {
     private final Logger log = LoggerFactory.getLogger(WopiProvider.class);
-    private URL url;
-    private WopiProviders type;
+    private final URL url;
+    private final WopiProviders type;
 
     protected WopiProvider(WopiProviders type, URL url) {
         this.type = type;
@@ -57,18 +57,21 @@ public abstract class WopiProvider {
 
             for (int i = 0; i < actions.getLength(); i++) {
                 Element app = (Element) actions.item(i);
-                Element action = (Element) app.getElementsByTagName("action").item(0);
-                String contentType = app.getAttribute("name");
-                String extension = action.getAttribute("ext");
-                String actionName = action.getAttribute("name");
-                String urlSrc = action.getAttribute("urlsrc");
-                result.add(
-                        new JsonObject()
-                                .put("content-type", contentType)
-                                .put("extension", extension)
-                                .put("action", actionName)
-                                .put("url", urlSrc)
-                );
+                NodeList subActions = app.getElementsByTagName("action");
+                for (int j = 0; j < subActions.getLength(); j++) {
+                    Element action = (Element) subActions.item(j);
+                    String contentType = app.getAttribute("name");
+                    String extension = action.getAttribute("ext");
+                    String actionName = action.getAttribute("name");
+                    String urlSrc = action.getAttribute("urlsrc");
+                    result.add(
+                            new JsonObject()
+                                    .put("content-type", contentType)
+                                    .put("extension", extension)
+                                    .put("action", actionName)
+                                    .put("url", urlSrc)
+                    );
+                }
             }
 
         } catch (ParserConfigurationException | SAXException | IOException e) {
