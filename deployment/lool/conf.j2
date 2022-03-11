@@ -1,0 +1,55 @@
+{
+    "name": "{{ loolVersion }}",
+    "config": {
+        "main" : "fr.openent.lool.Lool",
+        "port" : 8333,
+        "app-name" : "Lool",
+        "app-address" : "/lool",
+        "app-icon" : "Lool-large",
+        "host": "https://{{ host }}",
+        "ssl" : true,
+        "auto-redeploy": false,
+        "userbook-host": "https://{{ host }}",
+        "integration-mode" : "HTTP",
+        "app-registry.port" : 8012,
+        "mode" : "prod",
+        "entcore.port" : 8009,
+        {% if (loolOnlyOfficeMode is defined and loolOnlyOfficeMode) %}
+            "wopi": {
+				"provider": {
+					"type": "OnlyOffice",
+					"url": "{{ loolServer }}"
+				},
+				"hour-duration-token": "",
+				"templates": ["odt", "odp", "ods"],
+				"server_capabilities": {
+        {% else %}
+            "lool-server": "{{ loolServer }}",
+            "lool-config": {
+        {% endif %}
+            "DisableCopy": {{ loolDisableCopy|default('false') }},
+            "DisablePrint": {{ loolDisablePrint|default('false') }},
+            "DisableExport": {{ loolDisableExport|default('false') }},
+            "HideExportOption": {{ loolHideExportOption|default('false') }},
+            "DisableInactiveMessages": {{ loolDisableInactiveMessages|default('false') }},
+            "HideUserList": {{ loolHideUserList|default('false') }},
+            "HideSaveOption": {{ loolHideSaveOption|default('false') }},
+            "EnableShare": {{ loolEnableShare|default('false') }},
+            "EnableInsertRemoteImage": {{ loolEnableInsertRemoteImage|default('true') }},
+            "HidePrintOption": {{ loolHidePrintOption|default('false') }},
+            "UserCanNotWriteRelative": {{ loolUserCanNotWriteRelative|default('true') }},
+            "EnableOwnerTermination": {{ loolEnableOwnerTermination|default('false') }}
+		{% if (loolOnlyOfficeMode is defined and loolOnlyOfficeMode) %} } {% endif %}
+        },
+		"publicConf": {
+			"xiti": {
+				"ID_SERVICE": {
+					"default": 1
+				},
+				"LIBELLE_SERVICE": {
+                    "default": "PRODUCTION_COLLABORATIVE"
+				}
+			}
+		}
+    }
+}
