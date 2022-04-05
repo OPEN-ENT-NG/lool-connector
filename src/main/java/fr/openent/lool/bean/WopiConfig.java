@@ -21,7 +21,7 @@ public class WopiConfig {
         this.type = WopiProviders.valueOf(provider.getString("type", null));
         this.server = new URL(provider.getString("url", null));
         this.serverCapabilities = wopiConfig.getJsonObject("server_capabilities", new JsonObject()).getMap();
-        this.templates = wopiConfig.containsKey("templates") ? wopiConfig.getJsonArray("templates").getList() : Arrays.asList("odt", "odp", "ods");
+        this.templates = wopiConfig.containsKey("templates") ? wopiConfig.getJsonArray("templates").getList() : Arrays.asList("docx", "odp", "ods");
         this.duration_token = wopiConfig.getLong("hour-duration-token", 10L);
     }
 

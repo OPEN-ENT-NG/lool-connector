@@ -310,7 +310,7 @@ public class LoolController extends ControllerHelper {
                 case "odp":
                     contentType = "application/vnd.oasis.opendocument.presentation";
                     break;
-                case "odt":
+                case "docx":
                     contentType = "application/vnd.oasis.opendocument.text";
                     break;
                 case "ods":

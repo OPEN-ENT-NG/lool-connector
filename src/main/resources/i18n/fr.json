@@ -50,7 +50,7 @@
   "lool.sniplet.create-document.title": "Créer un document",
   "lool.sniplet.create-document.description": "Créer un document Libre Office et l'ajouter dans l'espace documentaire",
   "lool.sniplet.create-document.button.placeholder": "Créer un document",
-  "lool.sniplet.create-document.type.odt": "Texte",
+  "lool.sniplet.create-document.type.docx": "Texte",
   "lool.sniplet.create-document.type.odp": "Présentation",
   "lool.sniplet.create-document.type.ods": "Classeur",
   "lool.sniplet.create-document.type.odg": "Dessin",
