@@ -22,7 +22,7 @@ public class OnlyOffice extends WopiProvider {
     @Override
     public String redirectURL(HttpServerRequest request, ActionURL actionURL, JsonObject document) {
         return actionURL.url().getProtocol() + "://" + actionURL.url().getAuthority() + actionURL.url().getPath() +
-                "?lang=" + I18n.acceptLanguage(request) +
+                "?lang=fr" +
                 "&wopisrc=" + Wopi.getInstance().helper().encodeWopiParam(Renders.getScheme(request) + "://" + Renders.getHost(request) + "/lool/wopi/files/" + document.getString("_id"));
 //                "&wopisrc=" + Wopi.getInstance().helper().encodeWopiParam(getScheme(request) + "://" + "vertx:8090" + "/lool/wopi/files/" + document.getString("_id"));
     }
