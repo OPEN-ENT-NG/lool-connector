@@ -44,7 +44,7 @@ public class WopiHelper {
     public WopiHelper(Vertx vertx) {
         this.httpHelper = new HttpHelper(vertx);
         this.eb = vertx.eventBus();
-        this.httpClient = httpHelper.generateHttpClient(Wopi.getInstance().config().server());
+        this.httpClient = httpHelper.generateHttpClient(Wopi.getInstance().config().server(), Wopi.getInstance().config().type());
     }
 
     /**

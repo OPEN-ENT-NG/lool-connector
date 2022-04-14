@@ -9,6 +9,8 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
+import static fr.openent.lool.provider.WopiProviders.OnlyOffice;
+
 public class WopiConfig {
     private final WopiProviders type;
     private final URL server;
@@ -21,7 +23,8 @@ public class WopiConfig {
         this.type = WopiProviders.valueOf(provider.getString("type", null));
         this.server = new URL(provider.getString("url", null));
         this.serverCapabilities = wopiConfig.getJsonObject("server_capabilities", new JsonObject()).getMap();
-        this.templates = wopiConfig.containsKey("templates") ? wopiConfig.getJsonArray("templates").getList() : Arrays.asList("docx", "odp", "ods");
+        List<String> defaultTemplates = Arrays.asList((this.type.equals(OnlyOffice) ? "docx" : "odt"),"odp", "ods");
+        this.templates = wopiConfig.containsKey("templates") ? wopiConfig.getJsonArray("templates").getList() : defaultTemplates;
         this.duration_token = wopiConfig.getLong("hour-duration-token", 10L);
     }
 

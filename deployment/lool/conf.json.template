@@ -19,8 +19,8 @@
                 "type": "",
                 "url": ""
             },
-            "hour-duration-token": "",
-            "templates": ["docx", "odp", "ods"],
+            "hour-duration-token": 10,
+            "templates": ["odt", "odp", "ods"],
             "server_capabilities": {
                 "DisableCopy": false,
                 "DisablePrint": false,
