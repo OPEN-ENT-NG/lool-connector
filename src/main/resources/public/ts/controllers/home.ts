@@ -1,6 +1,7 @@
 import {Behaviours, idiom, ng, notify, workspace} from 'entcore';
 import {Eventer} from "entcore-toolkit";
 import {Element, Tree} from "entcore/types/src/ts/workspace/model";
+import {safeApply} from "../utils/safe-apply.utils";
 
 interface ViewModel {
     newDocument: {
@@ -98,7 +99,7 @@ export const homeController = ng.controller('HomeController', ['$scope',
             }
 
             vm.initDocument();
-            $scope.$apply();
+            safeApply($scope);
         };
 
         // Functions
@@ -111,7 +112,7 @@ export const homeController = ng.controller('HomeController', ['$scope',
             };
             vm.selectedFolder = vm.listFolders.trees[0];
             vm.display.warning = false;
-            $scope.$apply();
+            safeApply($scope);
         };
 
         vm.createDocument = (e, type) : void => {

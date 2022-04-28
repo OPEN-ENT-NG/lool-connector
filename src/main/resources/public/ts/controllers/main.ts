@@ -1,5 +1,6 @@
 import {angular, Behaviours, moment, ng, template, idiom, workspace} from 'entcore';
 import http from "axios";
+import {safeApply} from "../utils/safe-apply.utils";
 
 declare let window: any;
 
@@ -59,7 +60,7 @@ export const mainController = ng.controller('MainController', ['$scope', 'route'
         $scope.UI_InsertGraphic = () => {
             template.open('lightbox', 'UI_InsertGraphic');
             $scope.display.lightbox = true;
-            $scope.$apply();
+            safeApply($scope);
         };
 
         $scope.UI_Close = () => {
@@ -75,9 +76,9 @@ export const mainController = ng.controller('MainController', ['$scope', 'route'
 
         $scope.UI_FileVersions = async () => {
             $scope.revisions = (await http.get(`/workspace/document/${window.documentId}/revisions`)).data;
-            template.open('lightbox', 'UI_FileVersions');
+            await template.open('lightbox', 'UI_FileVersions');
             $scope.display.lightbox = true;
-            $scope.$apply();
+            safeApply($scope);
         };
 
         $scope.insertImage = async (file) => {
@@ -94,7 +95,7 @@ export const mainController = ng.controller('MainController', ['$scope', 'route'
             $scope.message.send(eventResponse);
             $scope.display.lightbox = false;
             delete $scope.file;
-            $scope.$apply();
+            safeApply($scope);
         };
 
         $scope.initMessageApi = ({source, origin}: MessageEvent) => {
