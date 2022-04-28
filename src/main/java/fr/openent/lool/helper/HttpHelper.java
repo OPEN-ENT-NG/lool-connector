@@ -4,6 +4,8 @@ import fr.openent.lool.provider.WopiProviders;
 import io.vertx.core.Vertx;
 import io.vertx.core.http.HttpClient;
 import io.vertx.core.http.HttpClientOptions;
+import io.vertx.core.net.ProxyOptions;
+import io.vertx.core.net.ProxyType;
 
 import java.io.UnsupportedEncodingException;
 import java.net.URL;
@@ -35,6 +37,15 @@ public class HttpHelper {
                 .setTrustAll(true)
                 .setSsl("https".equals(uri.getProtocol()))
                 .setKeepAlive(true);
+
+        if (System.getProperty("httpclient.proxyHost") != null) {
+            ProxyOptions proxyOptions = new ProxyOptions()
+                    .setHost(System.getProperty("httpclient.proxyHost"))
+                    .setPort(Integer.parseInt(System.getProperty("httpclient.proxyPort")))
+                    .setUsername(System.getProperty("httpclient.proxyUsername"))
+                    .setPassword(System.getProperty("httpclient.proxyPassword"));
+            options.setProxyOptions(proxyOptions);
+        }
 
         return vertx.createHttpClient(options);
     }
