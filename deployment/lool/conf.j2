@@ -14,15 +14,15 @@
         "app-registry.port" : 8012,
         "mode" : "prod",
         "entcore.port" : 8009,
-        {% if (loolOnlyOfficeMode is defined and loolOnlyOfficeMode) %}
+        {% if (loolProvider is defined) %}
             "wopi": {
-				"provider": {
-					"type": "OnlyOffice",
-					"url": "{{ loolServer }}"
-				},
-				"hour-duration-token": 10,
-				"templates": ["docx", "odp", "ods"],
-				"server_capabilities": {
+            "provider": {
+                "type": "{{ loolProvider }}",
+                "url": "{{ loolServer }}"
+            },
+            "hour-duration-token": 12,
+            "templates": ["docx", "odp", "ods"],
+            "server_capabilities": {
         {% else %}
             "lool-server": "{{ loolServer }}",
             "lool-config": {
@@ -39,7 +39,7 @@
             "HidePrintOption": {{ loolHidePrintOption|default('false') }},
             "UserCanNotWriteRelative": {{ loolUserCanNotWriteRelative|default('true') }},
             "EnableOwnerTermination": {{ loolEnableOwnerTermination|default('false') }}
-		{% if (loolOnlyOfficeMode is defined and loolOnlyOfficeMode) %} } {% endif %}
+        {% if (loolProvider is defined) %} } {% endif %}
         },
 		"publicConf": {
 			"xiti": {
