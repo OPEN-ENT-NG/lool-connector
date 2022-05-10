@@ -21,7 +21,7 @@
                 "url": "{{ loolServer }}"
             },
             "hour-duration-token": 12,
-            "templates": ["docx", "odp", "ods"],
+            "templates": {{ loolTemplates|default('["odt", "odp", "ods"]') }},
             "server_capabilities": {
         {% else %}
             "lool-server": "{{ loolServer }}",
