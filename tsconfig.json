@@ -11,7 +11,11 @@
       "dom",
       "es2017"
     ],
-    "types": ["jquery", "core-js"]
+    "types": [
+      "jquery",
+      "core-js",
+      "jest"
+    ]
   },
   "exclude": [
     "build",

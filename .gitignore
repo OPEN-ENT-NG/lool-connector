@@ -14,3 +14,4 @@ src/main/resources/public/js
 rev-manifest.json
 node_modules
 /src/main/resources/public/template/entcore/
+/coverage/front/cobertura-coverage.xml
