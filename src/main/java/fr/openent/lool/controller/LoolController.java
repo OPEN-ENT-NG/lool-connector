@@ -31,6 +31,8 @@ import org.entcore.common.bus.WorkspaceHelper;
 import org.entcore.common.controller.ControllerHelper;
 import org.entcore.common.events.EventStore;
 import org.entcore.common.events.EventStoreFactory;
+import org.entcore.common.http.filter.ResourceFilter;
+import org.entcore.common.http.filter.SuperAdminFilter;
 import org.entcore.common.storage.Storage;
 import org.entcore.common.user.UserUtils;
 
@@ -155,6 +157,8 @@ public class LoolController extends ControllerHelper {
     }
 
     @Get("/discover")
+    @ResourceFilter(SuperAdminFilter.class)
+    @SecuredAction(value ="", type = ActionType.RESOURCE)
     public void discover(HttpServerRequest request) {
         Wopi.getInstance().helper().discover(aBoolean -> request.response().setStatusCode(201).end("201 Created"));
     }
