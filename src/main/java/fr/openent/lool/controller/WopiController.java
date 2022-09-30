@@ -62,7 +62,7 @@ public class WopiController extends ControllerHelper {
                             .put("OwnerId", document.getString("owner"))
                             .put("UserId", token.getUser())
                             .put("UserFriendlyName", token.getDisplayName())
-                            .put("Version", 34) //TODO get version revision from document
+                            .put("Version", DateHelper.getDateString(document.getString("modified"), DateHelper.MONGO_DATE_FORMAT, DateHelper.SQL_FORMAT))
                             .put("LastModifiedTime", DateHelper.getDateString(document.getString("modified"), DateHelper.MONGO_DATE_FORMAT, DateHelper.SQL_FORMAT))
                             .put("UserCanWrite", canWrite);
 
