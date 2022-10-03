@@ -65,7 +65,7 @@ public class DefaultDocumentService implements DocumentService {
     @Override
     public void updateRevisionId(String documentId, String newFileId, Handler<Either<String, JsonObject>> handler) {
         JsonObject matcher = new JsonObject().put("_id", documentId);
-        JsonObject updater = new JsonObject().put("file", newFileId);
+        JsonObject updater = new JsonObject().put("file", newFileId).put("date", MongoDb.now());
 
         JsonObject documentMatcher = new JsonObject().put("documentId", documentId);
         JsonObject sort = new JsonObject().put("date", -1);
@@ -74,7 +74,8 @@ public class DefaultDocumentService implements DocumentService {
         Future<JsonObject> documentFuture = Future.future();
         Future<JsonObject> revisionFuture = Future.future();
 
-        MongoDb.getInstance().find("documentsRevisions", documentMatcher, sort, projection, -1, 1, Integer.MAX_VALUE, MongoDbResult.validResultsHandler(either -> {
+        MongoDb.getInstance().find("documentsRevisions", documentMatcher, sort, projection, -1, 1,
+                Integer.MAX_VALUE, MongoDbResult.validResultsHandler(either -> {
             if (either.isRight()) {
                 JsonArray documents = either.right().getValue();
                 if (documents.size() == 0) {
