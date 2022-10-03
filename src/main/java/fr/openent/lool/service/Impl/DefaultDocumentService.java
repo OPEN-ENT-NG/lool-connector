@@ -15,6 +15,8 @@ import io.vertx.core.logging.LoggerFactory;
 import org.entcore.common.mongodb.MongoDbResult;
 import org.entcore.common.storage.Storage;
 
+import java.util.Date;
+
 import static fr.wseduc.webutils.Utils.handlerToAsyncHandler;
 
 public class DefaultDocumentService implements DocumentService {
@@ -65,7 +67,8 @@ public class DefaultDocumentService implements DocumentService {
     @Override
     public void updateRevisionId(String documentId, String newFileId, Handler<Either<String, JsonObject>> handler) {
         JsonObject matcher = new JsonObject().put("_id", documentId);
-        JsonObject updater = new JsonObject().put("file", newFileId).put("date", MongoDb.now());
+        JsonObject updater = new JsonObject().put("file", newFileId);
+        JsonObject updaterRevision = updater.put("date", MongoDb.now());
 
         JsonObject documentMatcher = new JsonObject().put("documentId", documentId);
         JsonObject sort = new JsonObject().put("date", -1);
@@ -83,7 +86,7 @@ public class DefaultDocumentService implements DocumentService {
                     return;
                 }
                 JsonObject revisionMatcher = new JsonObject().put("_id", documents.getJsonObject(0).getString("_id"));
-                MongoDb.getInstance().update("documentsRevisions", revisionMatcher, new JsonObject().put("$set", updater), event -> {
+                MongoDb.getInstance().update("documentsRevisions", revisionMatcher, new JsonObject().put("$set", updaterRevision), event -> {
                     if ("ok".equals(event.body().getString("status"))) {
                         revisionFuture.complete(event.body());
                         storage.removeFile(documents.getJsonObject(0).getString("file"), entries -> {
@@ -100,7 +103,9 @@ public class DefaultDocumentService implements DocumentService {
             }
         }));
 
-        MongoDb.getInstance().update("documents", matcher, new JsonObject().put("$set", updater), FutureHelper.getFutureHandler(documentFuture));
+        JsonObject updaterDocument = updater.put("modified", MongoDb.formatDate(new Date()));
+
+        MongoDb.getInstance().update("documents", matcher, new JsonObject().put("$set", updaterDocument), FutureHelper.getFutureHandler(documentFuture));
 
         CompositeFuture.all(documentFuture, revisionFuture).setHandler(response -> {
             Either<String, JsonObject> ok = new Either.Right<>(new JsonObject().put("status", "ok"));

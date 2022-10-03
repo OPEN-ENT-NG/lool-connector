@@ -50,29 +50,31 @@ public class WopiController extends ControllerHelper {
             }
 
             Token token = new Token(validationObject.getJsonObject("token"));
-            Wopi.getInstance().helper().userCanWrite(token.getSessionId(), token.getDocument(), canWrite -> documentService.get(request.getParam("id"), event -> {
-                if (event.isRight()) {
-                    JsonObject document = event.right().getValue();
-                    JsonObject metadata = document.getJsonObject("metadata");
+            Wopi.getInstance().helper().userCanWrite(token.getSessionId(), token.getDocument(), canWrite ->
+                documentService.get(request.getParam("id"), event -> {
+                    if (event.isRight()) {
+                        JsonObject document = event.right().getValue();
+                        JsonObject metadata = document.getJsonObject("metadata");
 
-                    // Create wopi response config
-                    JsonObject response = new JsonObject()
-                            .put("BaseFileName", document.getString("name"))
-                            .put("Size", metadata.getInteger("size"))
-                            .put("OwnerId", document.getString("owner"))
-                            .put("UserId", token.getUser())
-                            .put("UserFriendlyName", token.getDisplayName())
-                            .put("Version", DateHelper.getDateString(document.getString("modified"), DateHelper.MONGO_DATE_FORMAT, DateHelper.SQL_FORMAT))
-                            .put("LastModifiedTime", DateHelper.getDateString(document.getString("modified"), DateHelper.MONGO_DATE_FORMAT, DateHelper.SQL_FORMAT))
-                            .put("UserCanWrite", canWrite);
+                        // Create wopi response config
+                        JsonObject response = new JsonObject()
+                                .put("BaseFileName", document.getString("name"))
+                                .put("Size", metadata.getInteger("size"))
+                                .put("OwnerId", document.getString("owner"))
+                                .put("UserId", token.getUser())
+                                .put("UserFriendlyName", token.getDisplayName())
+                                .put("Version", DateHelper.getDateString(document.getString("modified"), DateHelper.MONGO_DATE_FORMAT, DateHelper.SQL_FORMAT))
+                                .put("LastModifiedTime", DateHelper.getDateString(document.getString("modified"), DateHelper.MONGO_DATE_FORMAT, DateHelper.SQL_FORMAT))
+                                .put("UserCanWrite", canWrite);
 
-                    // Merge server capabilities into wopi response config
-                    response.mergeIn(new JsonObject(Wopi.getInstance().config().serverCapabilities()));
-                    renderJson(request, response);
-                } else {
-                    badRequest(request);
-                }
-            }));
+                        // Merge server capabilities into wopi response config
+                        response.mergeIn(new JsonObject(Wopi.getInstance().config().serverCapabilities()));
+                        renderJson(request, response);
+                    } else {
+                        badRequest(request);
+                    }
+                })
+            );
         });
     }
 
