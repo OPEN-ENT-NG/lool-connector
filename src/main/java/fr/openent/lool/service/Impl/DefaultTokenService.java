@@ -1,5 +1,6 @@
 package fr.openent.lool.service.Impl;
 
+import fr.openent.lool.core.constants.Field;
 import fr.openent.lool.service.TokenService;
 import fr.wseduc.mongodb.MongoDb;
 import fr.wseduc.webutils.Either;
@@ -18,7 +19,7 @@ public class DefaultTokenService implements TokenService {
     @Override
     public void create(String documentId, String userId, Handler<Either<String, JsonObject>> handler) {
         JsonObject token = new JsonObject()
-                .put("_id", UUID.randomUUID().toString())
+                .put(Field._ID, UUID.randomUUID().toString())
                 .put("document", documentId)
                 .put("user", userId);
 
@@ -37,7 +38,7 @@ public class DefaultTokenService implements TokenService {
     @Override
     public void get(String id, Handler<Either<String, JsonObject>> handler) {
         JsonObject matcher = new JsonObject()
-                .put("_id", id);
+                .put(Field._ID, id);
 
         MongoDb.getInstance().findOne(TOKEN_COLLECTION, matcher, message -> handler.handle(Utils.validResult(message)));
     }
@@ -45,7 +46,7 @@ public class DefaultTokenService implements TokenService {
     @Override
     public void delete(String id, Handler<Either<String, JsonObject>> handler) {
         JsonObject matcher = new JsonObject()
-                .put("_id", id);
+                .put(Field._ID, id);
 
         MongoDb.getInstance().delete(TOKEN_COLLECTION, matcher, message -> handler.handle(Utils.validResult(message)));
     }

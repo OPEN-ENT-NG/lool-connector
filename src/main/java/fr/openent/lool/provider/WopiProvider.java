@@ -1,6 +1,7 @@
 package fr.openent.lool.provider;
 
 import fr.openent.lool.bean.ActionURL;
+import fr.openent.lool.core.constants.Field;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.core.http.HttpServerRequest;
 import io.vertx.core.json.JsonArray;
@@ -60,9 +61,9 @@ public abstract class WopiProvider {
                 NodeList subActions = app.getElementsByTagName("action");
                 for (int j = 0; j < subActions.getLength(); j++) {
                     Element action = (Element) subActions.item(j);
-                    String contentType = app.getAttribute("name");
+                    String contentType = app.getAttribute(Field.NAME);
                     String extension = action.getAttribute("ext");
-                    String actionName = action.getAttribute("name");
+                    String actionName = action.getAttribute(Field.NAME);
                     String urlSrc = action.getAttribute("urlsrc");
                     result.add(
                             new JsonObject()

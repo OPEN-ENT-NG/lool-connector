@@ -4,6 +4,7 @@ import fr.openent.lool.Lool;
 import fr.openent.lool.bean.ActionURL;
 import fr.openent.lool.bean.Token;
 import fr.openent.lool.bean.WopiConfig;
+import fr.openent.lool.core.constants.Field;
 import fr.openent.lool.helper.TraceHelper;
 import fr.openent.lool.provider.Wopi;
 import fr.openent.lool.service.DocumentService;
@@ -42,7 +43,6 @@ import java.nio.file.Paths;
 import java.sql.Timestamp;
 import java.time.Duration;
 import java.time.Instant;
-import java.util.Date;
 
 import static fr.wseduc.webutils.Utils.handlerToAsyncHandler;
 
@@ -101,7 +101,7 @@ public class LoolController extends ControllerHelper {
                                             .put("duration-token",duration_token + ts.getTime());
                                     renderView(request, params, "doc.html", null);
                                     eventStore.createAndStoreEvent(Actions.ACCESS.name(), request);
-                                    TraceHelper.add(Actions.ACCESS.name(), token.getUser(), token.getDocument(), TraceHelper.getFileExtension(document.getString("name")));
+                                    TraceHelper.add(Actions.ACCESS.name(), token.getUser(), token.getDocument(), TraceHelper.getFileExtension(document.getString(Field.NAME)));
                                 } else {
                                     renderError(request);
                                 }
@@ -126,12 +126,12 @@ public class LoolController extends ControllerHelper {
      * @param handler Function handler returning data
      */
     private void getRedirectionUrl(HttpServerRequest request, JsonObject document, Handler<Either<String, String>> handler) {
-        Wopi.getInstance().helper().getActionUrl(document.getJsonObject("metadata").getString("content-type"), null, event -> {
+        Wopi.getInstance().helper().getActionUrl(document.getJsonObject(Field.METADATA).getString("content-type"), null, event -> {
             if (event.isRight()) {
                 ActionURL actionURL = event.right().getValue();
                 handler.handle(new Either.Right<>(Wopi.getInstance().provider().redirectURL(request, actionURL, document)));
             } else {
-                String message = "[LoolController@redirectToLool] Failed to redirect to Libre Office Online for document " + document.getString("_id");
+                String message = "[LoolController@redirectToLool] Failed to redirect to Libre Office Online for document " + document.getString(Field._ID);
                 log.error(message, event.left().getValue());
                 handler.handle(new Either.Left<>(message));
             }
@@ -173,7 +173,7 @@ public class LoolController extends ControllerHelper {
         }
         String accessToken = request.getParam("access_token");
         String image = request.getParam("image");
-        String document = request.getParam("id");
+        String document = request.getParam(Field.ID);
         Wopi.getInstance().helper().validateToken(accessToken, document, Bindings.CONTRIB.toString(), validation -> {
             if (!validation.getBoolean("valid")) {
                 unauthorized(request);
@@ -181,9 +181,9 @@ public class LoolController extends ControllerHelper {
             }
             UserUtils.getUserInfos(eb, request, user -> Wopi.getInstance().helper().userCanRead(CookieHelper.getInstance().getSigned("oneSessionId", request), image, canRead -> {
                 if (canRead) {
-                    tokenService.create(request.getParam("id"), user.getUserId(), either -> {
+                    tokenService.create(request.getParam(Field.ID), user.getUserId(), either -> {
                         if (either.isRight()) {
-                            renderJson(request, new JsonObject().put("_id", either.right().getValue().getString("_id")), 201);
+                            renderJson(request, new JsonObject().put(Field._ID, either.right().getValue().getString(Field._ID)), 201);
                         } else {
                             renderError(request);
                         }
@@ -198,20 +198,20 @@ public class LoolController extends ControllerHelper {
     @Get("/documents/:id/image/:imageId")
     @ApiDoc("Get all Libre Office Online file capabilities")
     public void getDocument(HttpServerRequest request) {
-        if (!request.params().contains("access_token") && !request.params().contains("token")) {
+        if (!request.params().contains("access_token") && !request.params().contains(Field.TOKEN)) {
             badRequest(request);
             return;
         }
-        String documentId = request.getParam("id");
+        String documentId = request.getParam(Field.ID);
         String imageId = request.getParam("imageId");
         String accessToken = request.getParam("access_token");
-        String token = request.getParam("token");
+        String token = request.getParam(Field.TOKEN);
         Wopi.getInstance().helper().validateToken(accessToken, documentId, Bindings.CONTRIB.toString(), validation -> {
             if (!validation.getBoolean("valid")) {
                 unauthorized(request);
                 return;
             }
-            Token loolToken = new Token(validation.getJsonObject("token"));
+            Token loolToken = new Token(validation.getJsonObject(Field.TOKEN));
 
             tokenService.get(token, either -> {
                 if (either.isRight()) {
@@ -221,11 +221,11 @@ public class LoolController extends ControllerHelper {
                                 documentService.get(imageId, event -> {
                                     if (event.isRight()) {
                                         JsonObject image = event.right().getValue();
-                                        fileService.get(image.getString("file"), buffer -> request.response()
+                                        fileService.get(image.getString(Field.FILE), buffer -> request.response()
                                                 .setStatusCode(200)
                                                 .putHeader("Content-Type", "application/octet-stream")
                                                 .putHeader("Content-Transfer-Encoding", "Binary")
-                                                .putHeader("Content-disposition", "attachment; filename=" + image.getString("name"))
+                                                .putHeader("Content-disposition", "attachment; filename=" + image.getString(Field.NAME))
                                                 .end(buffer));
                                     } else {
                                         renderError(request);
@@ -249,7 +249,7 @@ public class LoolController extends ControllerHelper {
     @ApiDoc("Create new document based on lool templates")
     @SecuredAction("create.document")
     public void createDocumentFromTemplate(HttpServerRequest request) {
-        if (!request.params().contains("type") && !request.params().contains("name")) {
+        if (!request.params().contains("type") && !request.params().contains(Field.NAME)) {
             badRequest(request);
             return;
         }
@@ -258,7 +258,7 @@ public class LoolController extends ControllerHelper {
             String path = FileResolver.absolutePath("public/lool-templates/");
             String type = request.getParam("type");
             String filePath = path + "template." + type;
-            String filename = request.getParam("name") + "." + type;
+            String filename = request.getParam(Field.NAME) + "." + type;
             String folder = request.getParam("folder");
             String contentType = getContentType(type, filePath);
 
@@ -279,8 +279,8 @@ public class LoolController extends ControllerHelper {
                         }
                         JsonObject file = either.right().getValue();
                         this.workspaceHelper.addDocument(file, user, filename, "media-library", false, new JsonArray(), handlerToAsyncHandler(message -> {
-                            if ("ok".equals(message.body().getString("status"))) {
-                                String documentId = message.body().getString("_id");
+                            if (Field.OK.equals(message.body().getString(Field.STATUS))) {
+                                String documentId = message.body().getString(Field._ID);
                                 if (folder != null) {
                                     workspaceHelper.moveDocument(documentId, folder, user, res -> {
                                         redirect(request, "/lool/documents/" + documentId + "/open?resync=true");

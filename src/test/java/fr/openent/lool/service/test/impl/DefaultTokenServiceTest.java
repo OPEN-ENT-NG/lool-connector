@@ -1,6 +1,7 @@
 package fr.openent.lool.service.test.impl;
 
 
+import fr.openent.lool.core.constants.Field;
 import fr.openent.lool.service.TokenService;
 import io.vertx.core.Vertx;
 import io.vertx.core.json.Json;
@@ -44,7 +45,7 @@ public class DefaultTokenServiceTest {
 
         vertx.eventBus().consumer("fr.openent.lool", message -> {
             JsonObject body = (JsonObject) message.body();
-            body.getJsonObject("document").remove("_id");
+            body.getJsonObject("document").remove(Field._ID);
             ctx.assertEquals(expectedCollection, body.getString("collection"));
             ctx.assertEquals(expectedParams, body.getJsonObject("document"));
             async.complete();
@@ -70,7 +71,7 @@ public class DefaultTokenServiceTest {
             ctx.assertEquals(expectedParams, body.getJsonObject("matcher"));
             async.complete();
         });
-        defaultTokenService.get("id", null);
+        defaultTokenService.get(Field.ID, null);
     }
 
     private JsonObject expectedJsonTestGet() {
@@ -83,14 +84,14 @@ public class DefaultTokenServiceTest {
     public void testDelete(TestContext ctx) {
         Async async = ctx.async();
         String expectedCollection = "document_token";
-        JsonObject expectedParams = new JsonObject().put("_id", "id");
+        JsonObject expectedParams = new JsonObject().put(Field._ID, Field.ID);
         vertx.eventBus().consumer("fr.openent.lool", message -> {
             JsonObject body = (JsonObject) message.body();
             ctx.assertEquals(expectedCollection, body.getString("collection"));
             ctx.assertEquals(expectedParams, body.getJsonObject("matcher"));
             async.complete();
         });
-        defaultTokenService.delete("id", null);
+        defaultTokenService.delete(Field.ID, null);
     }
 
     @Test

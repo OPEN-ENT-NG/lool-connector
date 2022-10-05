@@ -1,5 +1,6 @@
 package fr.openent.lool.bean;
 
+import fr.openent.lool.core.constants.Field;
 import fr.wseduc.mongodb.MongoDb;
 import fr.wseduc.webutils.Either;
 import fr.wseduc.webutils.request.CookieHelper;
@@ -24,7 +25,7 @@ public class Token {
     private boolean valid;
 
     public Token(EventBus eb, HttpServerRequest request, Handler<Either<String, Token>> handler) {
-        this.document = request.getParam("id");
+        this.document = request.getParam(Field.ID);
         this.date = MongoDb.now();
         this.sessionId = CookieHelper.getInstance().getSigned("oneSessionId", request);
         this._id = UUID.randomUUID().toString();
@@ -34,13 +35,13 @@ public class Token {
                 this.displayName = user.getUsername();
                 JsonObject action = new JsonObject()
                         .put("action", "getDocument")
-                        .put("id", this.document);
+                        .put(Field.ID, this.document);
                 eb.send("org.entcore.workspace", action, handlerToAsyncHandler(message -> {
                     JsonObject body = message.body();
-                    if (!"ok".equals(body.getString("status"))) {
+                    if (!Field.OK.equals(body.getString(Field.STATUS))) {
                         handler.handle(new Either.Left<>("[Token@contructor] An error occurred when calling document"));
                     } else {
-                        this.filename = message.body().getJsonObject("result").getString("name");
+                        this.filename = message.body().getJsonObject("result").getString(Field.NAME);
                         handler.handle(new Either.Right<>(this));
                     }
                 }));
@@ -51,12 +52,12 @@ public class Token {
     }
 
     public Token(JsonObject object) {
-        this._id = object.getString("_id");
+        this._id = object.getString(Field._ID);
         this.user = object.getString("user");
         this.document = object.getString("document");
         this.sessionId = object.getString("sessionId");
         this.displayName = object.getString("displayName");
-        this.date = object.getJsonObject("date");
+        this.date = object.getJsonObject(Field.DATE);
         this.valid = object.getBoolean("valid", true);
     }
 
@@ -70,10 +71,10 @@ public class Token {
                 .put("document", this.document)
                 .put("sessionId", this.sessionId)
                 .put("displayName", this.displayName)
-                .put("date", this.date)
+                .put(Field.DATE, this.date)
                 .put("filename", this.filename);
         if (this._id != null) {
-            token.put("_id", this._id);
+            token.put(Field._ID, this._id);
         }
         return token;
     }

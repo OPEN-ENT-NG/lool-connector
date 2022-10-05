@@ -1,5 +1,6 @@
 package fr.openent.lool.helper;
 
+import fr.openent.lool.core.constants.Field;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
 import io.vertx.core.eventbus.Message;
@@ -14,7 +15,7 @@ public class FutureHelper {
      */
     public static Handler<Message<JsonObject>> getFutureHandler(Future<JsonObject> future) {
         return event -> {
-            if ("ok".equals(event.body().getString("status"))) {
+            if (Field.OK.equals(event.body().getString(Field.STATUS))) {
                 future.complete(event.body());
             } else {
                 future.fail(event.body().getString("message"));

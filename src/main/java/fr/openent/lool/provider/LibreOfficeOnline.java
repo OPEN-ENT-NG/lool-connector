@@ -1,6 +1,7 @@
 package fr.openent.lool.provider;
 
 import fr.openent.lool.bean.ActionURL;
+import fr.openent.lool.core.constants.Field;
 import io.vertx.core.http.HttpServerRequest;
 import io.vertx.core.json.JsonObject;
 
@@ -18,8 +19,8 @@ public class LibreOfficeOnline extends WopiProvider {
     @Override
     public String redirectURL(HttpServerRequest request, ActionURL actionURL, JsonObject document) {
         return actionURL.url().getProtocol() + "://" + actionURL.url().getHost() + actionURL.url().getPath() +
-                "?WOPISrc=" + Wopi.getInstance().helper().encodeWopiParam(getScheme(request) + "://" + getHost(request) + "/lool/wopi/files/" + document.getString("_id")) +
-                "&title=" + Wopi.getInstance().helper().encodeWopiParam(document.getString("name")) +
+                "?WOPISrc=" + Wopi.getInstance().helper().encodeWopiParam(getScheme(request) + "://" + getHost(request) + "/lool/wopi/files/" + document.getString(Field._ID)) +
+                "&title=" + Wopi.getInstance().helper().encodeWopiParam(document.getString(Field.NAME)) +
                 "&lang=fr" +
                 "&closebutton=0" +
                 "&revisionhistory=1";
