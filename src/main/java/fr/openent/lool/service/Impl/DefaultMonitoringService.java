@@ -1,5 +1,6 @@
 package fr.openent.lool.service.Impl;
 
+import fr.openent.lool.core.constants.Field;
 import fr.openent.lool.service.MonitoringService;
 import fr.wseduc.mongodb.MongoDb;
 import fr.wseduc.webutils.Either;
@@ -24,11 +25,11 @@ public class DefaultMonitoringService implements MonitoringService {
                 .put("pipeline", pipeline);
         JsonArray arrayElemAt = new JsonArray().add("$filename").add(0);
         JsonObject group = new JsonObject()
-                .put("_id", "$document")
+                .put(Field._ID, "$document")
                 .put("users", new JsonObject().put("$sum", 1))
                 .put("filename", new JsonObject().put("$push", "$filename"));
         JsonObject project = new JsonObject()
-                .put("_id", "$_id")
+                .put(Field._ID, "$_id")
                 .put("filename", new JsonObject().put("$arrayElemAt", arrayElemAt))
                 .put("users", "$users");
         JsonObject matcher = new JsonObject()
@@ -38,7 +39,7 @@ public class DefaultMonitoringService implements MonitoringService {
                 .add(new JsonObject().put("$project", project));
         MongoDb.getInstance().command(aggregation.toString(), message -> {
             JsonObject body = message.body();
-            if ("ok".equals(body.getString("status"))) {
+            if (Field.OK.equals(body.getString(Field.STATUS))) {
                 handler.handle(new Either.Right<>(body.getJsonObject("result").getJsonObject("cursor").getJsonArray("firstBatch")));
             } else {
                 String error = "[DefaultMonitoringService@getDocuments] Failed to fetch documents";
@@ -70,12 +71,12 @@ public class DefaultMonitoringService implements MonitoringService {
                 .put("cursor", new JsonObject())
                 .put("pipeline", pipeline);
         JsonObject group = new JsonObject()
-                .put("_id", "$extension")
+                .put(Field._ID, "$extension")
                 .put("count", new JsonObject().put("$sum", 1));
         JsonObject sort = new JsonObject()
                 .put("$sort", new JsonObject().put("count", -1));
         JsonObject projectionFields = new JsonObject()
-                .put("_id", "$_id")
+                .put(Field._ID, "$_id")
                 .put("count", "$count");
         pipeline.add(new JsonObject().put("$match", new JsonObject()))
                 .add(new JsonObject().put("$group", group))
@@ -83,7 +84,7 @@ public class DefaultMonitoringService implements MonitoringService {
                 .add(new JsonObject().put("$project", projectionFields));
         MongoDb.getInstance().command(aggregation.toString(), message -> {
             JsonObject body = message.body();
-            if ("ok".equals(body.getString("status"))) {
+            if (Field.OK.equals(body.getString(Field.STATUS))) {
                 handler.handle(new Either.Right<>(body.getJsonObject("result").getJsonObject("cursor").getJsonArray("firstBatch")));
             } else {
                 String error = "[DefaultMonitoringService@getExtensions] Failed to fetch extensions";

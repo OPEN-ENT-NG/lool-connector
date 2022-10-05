@@ -4,6 +4,7 @@ import com.mongodb.DBObject;
 import com.mongodb.QueryBuilder;
 import fr.openent.lool.bean.ActionURL;
 import fr.openent.lool.bean.Token;
+import fr.openent.lool.core.constants.Field;
 import fr.openent.lool.provider.Wopi;
 import fr.openent.lool.utils.Bindings;
 import fr.wseduc.mongodb.MongoDb;
@@ -59,7 +60,7 @@ public class WopiHelper {
                 Token token = event.right().getValue();
                 MongoDb.getInstance().save(WopiHelper.TOKEN_COLLECTION, token.toJSON(), saveEvent -> {
                     JsonObject body = saveEvent.body();
-                    if ("ok".equals(body.getString("status"))) {
+                    if (Field.OK.equals(body.getString(Field.STATUS))) {
                         handler.handle(new Either.Right<>(token));
                     } else {
                         handler.handle(new Either.Left<>(body.getString("message")));
@@ -92,7 +93,7 @@ public class WopiHelper {
             filter.put("action", action);
         }
         MongoDb.getInstance().findOne(DISCOVER_COLLECTION, filter, event -> {
-            if ("ok".equals(event.body().getString("status"))) {
+            if (Field.OK.equals(event.body().getString(Field.STATUS))) {
                 JsonObject record = event.body();
                 if (!record.containsKey("result")) {
                     handler.handle(new Either.Left<>("[WopiHelper@getActionUrl] Content-type doesn't match Libre Office Online capabilities"));
@@ -173,7 +174,7 @@ public class WopiHelper {
      */
     public void validateToken(String tokenId, String documentId, String right, Handler<JsonObject> handler) {
         QueryBuilder query = new QueryBuilder().and(
-                QueryBuilder.start("_id").is(tokenId).get(),
+                QueryBuilder.start(Field._ID).is(tokenId).get(),
                 QueryBuilder.start("document").is(documentId).get()
         );
         MongoDb.getInstance().findOne(TOKEN_COLLECTION, MongoQueryBuilder.build(query), message -> {
@@ -185,7 +186,7 @@ public class WopiHelper {
                 }
                 Token token = new Token(tokenEvent.right().getValue());
                 if (!token.isValid()) {
-                    handler.handle(new JsonObject().put("valid", false).put("token", tokenEvent.right().getValue()));
+                    handler.handle(new JsonObject().put("valid", false).put(Field.TOKEN, tokenEvent.right().getValue()));
                     return;
                 }
                 UserUtils.getSession(eb, token.getSessionId(), session -> {
@@ -193,7 +194,7 @@ public class WopiHelper {
                         handler.handle(new JsonObject().put("valid", false).put("err", session == null ? "Session not found" : "Invalid user"));
                         return;
                     }
-                    userCan(token.getSessionId(), documentId, right, can -> handler.handle(new JsonObject().put("valid", can).put("token", tokenEvent.right().getValue())));
+                    userCan(token.getSessionId(), documentId, right, can -> handler.handle(new JsonObject().put("valid", can).put(Field.TOKEN, tokenEvent.right().getValue())));
                 });
             } else {
                 handler.handle(new JsonObject().put("valid", false));
@@ -247,16 +248,16 @@ public class WopiHelper {
                 groups.add(QueryBuilder.start("groupId").is(gpId)
                         .put(right).is(true).get());
             }
-            QueryBuilder query = QueryBuilder.start("_id").is(documentId).or(
-                    QueryBuilder.start("owner").is(session.getString("userId")).get(),
+            QueryBuilder query = QueryBuilder.start(Field._ID).is(documentId).or(
+                    QueryBuilder.start(Field.OWNER).is(session.getString("userId")).get(),
                     QueryBuilder.start("shared").elemMatch(
                             new QueryBuilder().or(groups.toArray(new DBObject[groups.size()])).get()).get(),
                     QueryBuilder.start("inheritedShares").elemMatch(
                             new QueryBuilder().or(groups.toArray(new DBObject[groups.size()])).get()).get()
             );
 
-            MongoDb.getInstance().count("documents", MongoQueryBuilder.build(query),
-                    res -> handler.handle(res.body() != null && "ok".equals(res.body().getString("status")) && 1 == res.body().getInteger("count")));
+            MongoDb.getInstance().count(Field.DOCUMENTS, MongoQueryBuilder.build(query),
+                    res -> handler.handle(res.body() != null && Field.OK.equals(res.body().getString(Field.STATUS)) && 1 == res.body().getInteger("count")));
         });
     }
 
@@ -270,9 +271,9 @@ public class WopiHelper {
         JsonObject keys = new JsonObject()
                 .put("content-type", 1)
                 .put("extension", 1)
-                .put("_id", 0);
+                .put(Field._ID, 0);
         MongoDb.getInstance().find(DISCOVER_COLLECTION, query, sort, keys, event -> {
-            if ("ok".equals(event.body().getString("status"))) {
+            if (Field.OK.equals(event.body().getString(Field.STATUS))) {
                 promise.complete(event.body().getJsonArray("results"));
             } else {
                 promise.fail(event.body().getString("message"));
@@ -303,11 +304,11 @@ public class WopiHelper {
         JsonObject matcher = new JsonObject()
                 .put("user", userId)
                 .put("document", documentId)
-                .put("_id", token);
+                .put(Field._ID, token);
 
         MongoDb.getInstance().findOne(TOKEN_COLLECTION, matcher, message -> {
             Either<String, JsonObject> either = Utils.validResult(message);
-            handler.handle(either.isRight() && either.right().getValue().containsKey("_id"));
+            handler.handle(either.isRight() && either.right().getValue().containsKey(Field._ID));
         });
     }
 
@@ -319,7 +320,7 @@ public class WopiHelper {
      */
     public void deleteToken(String token, Handler<Either<String, JsonObject>> handler) {
         JsonObject matcher = new JsonObject()
-                .put("_id", token);
+                .put(Field._ID, token);
 
         MongoDb.getInstance().delete(TOKEN_COLLECTION, matcher, message -> handler.handle(Utils.validResult(message)));
     }
@@ -332,7 +333,7 @@ public class WopiHelper {
      */
     public void invalidateToken(String token, Handler<Either<String, JsonObject>> handler) {
         JsonObject matcher = new JsonObject()
-                .put("_id", token);
+                .put(Field._ID, token);
         MongoDb.getInstance().findOne(TOKEN_COLLECTION, matcher, message -> {
             Either<String, JsonObject> either = Utils.validResult(message);
             if (either.isLeft()) {

@@ -1,5 +1,6 @@
 package fr.openent.lool.service.Impl;
 
+import fr.openent.lool.core.constants.Field;
 import fr.openent.lool.helper.FutureHelper;
 import fr.openent.lool.service.DocumentService;
 import fr.wseduc.mongodb.MongoDb;
@@ -34,10 +35,10 @@ public class DefaultDocumentService implements DocumentService {
     public void get(String documentId, Handler<Either<String, JsonObject>> handler) {
         JsonObject action = new JsonObject()
                 .put("action", "getDocument")
-                .put("id", documentId);
+                .put(Field.ID, documentId);
         eb.send(WORKSPACE_BUS_ADDRESS, action, handlerToAsyncHandler(message -> {
             JsonObject body = message.body();
-            if (!"ok".equals(body.getString("status"))) {
+            if (!Field.OK.equals(body.getString(Field.STATUS))) {
                 handler.handle(new Either.Left<>("[DefaultDocumentService@get] An error occurred when calling document by event bus"));
             } else {
                 handler.handle(new Either.Right<>(message.body().getJsonObject("result")));
@@ -48,15 +49,15 @@ public class DefaultDocumentService implements DocumentService {
     @Override
     public void update(String documentId, String newFileId, JsonObject metadata, Handler<Either<String, JsonObject>> handler) {
         JsonObject uploaded = new JsonObject()
-                .put("_id", newFileId)
-                .put("metadata", metadata);
+                .put(Field._ID, newFileId)
+                .put(Field.METADATA, metadata);
         JsonObject action = new JsonObject()
                 .put("action", "updateDocument")
-                .put("id", documentId)
+                .put(Field.ID, documentId)
                 .put("uploaded", uploaded);
 
         eb.send(WORKSPACE_BUS_ADDRESS, action, handlerToAsyncHandler(message -> {
-            if (!"ok".equals(message.body().getString("status"))) {
+            if (!Field.OK.equals(message.body().getString(Field.STATUS))) {
                 handler.handle(new Either.Left<>("[DefaultDocumentService@update]  An error occurred when calling document by event bus"));
             } else {
                 handler.handle(new Either.Right<>(message.body().getJsonObject("result")));
@@ -66,18 +67,18 @@ public class DefaultDocumentService implements DocumentService {
 
     @Override
     public void updateRevisionId(String documentId, String newFileId, Handler<Either<String, JsonObject>> handler) {
-        JsonObject matcher = new JsonObject().put("_id", documentId);
-        JsonObject updater = new JsonObject().put("file", newFileId);
-        JsonObject updaterRevision = updater.put("date", MongoDb.now());
+        JsonObject matcher = new JsonObject().put(Field._ID, documentId);
+        JsonObject updater = new JsonObject().put(Field.FILE, newFileId);
+        JsonObject updaterRevision = updater.put(Field.DATE, MongoDb.now());
 
-        JsonObject documentMatcher = new JsonObject().put("documentId", documentId);
-        JsonObject sort = new JsonObject().put("date", -1);
-        JsonObject projection = new JsonObject().put("_id", 1).put("file", 1);
+        JsonObject documentMatcher = new JsonObject().put(Field.DOCUMENTID, documentId);
+        JsonObject sort = new JsonObject().put(Field.DATE, -1);
+        JsonObject projection = new JsonObject().put(Field._ID, 1).put(Field.FILE, 1);
 
         Future<JsonObject> documentFuture = Future.future();
         Future<JsonObject> revisionFuture = Future.future();
 
-        MongoDb.getInstance().find("documentsRevisions", documentMatcher, sort, projection, -1, 1,
+        MongoDb.getInstance().find(Field.DOCUMENTSREVISION, documentMatcher, sort, projection, -1, 1,
                 Integer.MAX_VALUE, MongoDbResult.validResultsHandler(either -> {
             if (either.isRight()) {
                 JsonArray documents = either.right().getValue();
@@ -85,13 +86,13 @@ public class DefaultDocumentService implements DocumentService {
                     revisionFuture.fail("No revision found");
                     return;
                 }
-                JsonObject revisionMatcher = new JsonObject().put("_id", documents.getJsonObject(0).getString("_id"));
-                MongoDb.getInstance().update("documentsRevisions", revisionMatcher, new JsonObject().put("$set", updaterRevision), event -> {
-                    if ("ok".equals(event.body().getString("status"))) {
+                JsonObject revisionMatcher = new JsonObject().put(Field._ID, documents.getJsonObject(0).getString(Field._ID));
+                MongoDb.getInstance().update(Field.DOCUMENTSREVISION, revisionMatcher, new JsonObject().put(Field.$SET, updaterRevision), event -> {
+                    if (Field.OK.equals(event.body().getString(Field.STATUS))) {
                         revisionFuture.complete(event.body());
-                        storage.removeFile(documents.getJsonObject(0).getString("file"), entries -> {
-                            if (!"ok".equals(entries.getString("status"))) {
-                                log.error("[DefaultDocumentService@updateRevisionId] Failed to delete revision " + documents.getJsonObject(0).getString("file"));
+                        storage.removeFile(documents.getJsonObject(0).getString(Field.FILE), entries -> {
+                            if (!Field.OK.equals(entries.getString(Field.STATUS))) {
+                                log.error("[DefaultDocumentService@updateRevisionId] Failed to delete revision " + documents.getJsonObject(0).getString(Field.FILE));
                             }
                         });
                     } else {
@@ -103,12 +104,12 @@ public class DefaultDocumentService implements DocumentService {
             }
         }));
 
-        JsonObject updaterDocument = updater.put("modified", MongoDb.formatDate(new Date()));
+        JsonObject updaterDocument = updater.put(Field.MODIFIED, MongoDb.formatDate(new Date()));
 
-        MongoDb.getInstance().update("documents", matcher, new JsonObject().put("$set", updaterDocument), FutureHelper.getFutureHandler(documentFuture));
+        MongoDb.getInstance().update(Field.DOCUMENTS, matcher, new JsonObject().put(Field.$SET, updaterDocument), FutureHelper.getFutureHandler(documentFuture));
 
         CompositeFuture.all(documentFuture, revisionFuture).setHandler(response -> {
-            Either<String, JsonObject> ok = new Either.Right<>(new JsonObject().put("status", "ok"));
+            Either<String, JsonObject> ok = new Either.Right<>(new JsonObject().put(Field.STATUS, Field.OK));
             Either<String, JsonObject> ko = new Either.Left<>("Failed to update revision and document");
 
             handler.handle(response.succeeded() ? ok : ko);

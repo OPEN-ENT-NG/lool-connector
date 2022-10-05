@@ -1,5 +1,6 @@
 package fr.openent.lool.service.Impl;
 
+import fr.openent.lool.core.constants.Field;
 import fr.openent.lool.service.FileService;
 import fr.wseduc.webutils.Either;
 import io.vertx.core.Handler;
@@ -27,7 +28,7 @@ public class DefaultFileService implements FileService {
         Buffer responseBuffer = new BufferImpl();
         request.handler(responseBuffer::appendBuffer);
         request.endHandler(aVoid -> storage.writeBuffer(responseBuffer, contentType, filename, entries -> {
-            if ("ok".equals(entries.getString("status"))) {
+            if (Field.OK.equals(entries.getString(Field.STATUS))) {
                 handler.handle(new Either.Right<>(entries));
             } else {
                 handler.handle(new Either.Left<>("[DefaultFileService@add] An error occurred while writing file in the storage"));
@@ -39,10 +40,10 @@ public class DefaultFileService implements FileService {
     @Override
     public void add(HttpServerRequest request, Handler<Either<String, JsonObject>> handler) {
         storage.writeUploadFile(request, message -> {
-            if (!"ok".equals(message.getString("status"))) {
+            if (!Field.OK.equals(message.getString(Field.STATUS))) {
                 handler.handle(new Either.Left<>("[DefaultFileService@add] Failed to upload file from http request"));
             } else {
-                message.remove("status");
+                message.remove(Field.STATUS);
                 handler.handle(new Either.Right<>(message));
             }
         });
@@ -51,10 +52,10 @@ public class DefaultFileService implements FileService {
     @Override
     public void add(Buffer file, String contentType, String filename, Handler<Either<String, JsonObject>> handler) {
         storage.writeBuffer(file, contentType, filename, message -> {
-            if (!"ok".equals(message.getString("status"))) {
+            if (!Field.OK.equals(message.getString(Field.STATUS))) {
                 handler.handle(new Either.Left<>("[DefaultFileService@add] Failed to upload file from buffer"));
             } else {
-                message.remove("status");
+                message.remove(Field.STATUS);
                 handler.handle(new Either.Right<>(message));
             }
         });
