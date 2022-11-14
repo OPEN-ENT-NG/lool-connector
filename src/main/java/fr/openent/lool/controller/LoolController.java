@@ -311,6 +311,7 @@ public class LoolController extends ControllerHelper {
 
         if (contentType == null) {
             switch (type) {
+                case "pptx":
                 case "odp":
                     contentType = "application/vnd.oasis.opendocument.presentation";
                     break;
@@ -318,6 +319,7 @@ public class LoolController extends ControllerHelper {
                 case "odt":
                     contentType = "application/vnd.oasis.opendocument.text";
                     break;
+                case "xlsx":
                 case "ods":
                     contentType = "application/vnd.oasis.opendocument.spreadsheet";
                     break;
