@@ -31,4 +31,16 @@ public class Field {
     public static final String STATUS = "status";
     public static final String OK = "ok";
 
+    //OnlyOffice extension
+    public static final String PPTX = "pptx";
+    public static final String XLSX = "xlsx";
+    public static final String DOCX = "docx";
+
+    //LibreOffice extension
+    public static final String ODP = "odp";
+    public static final String ODT = "odt";
+    public static final String ODS = "ods";
+    public static final String ODG = "odg";
+
+
 }
