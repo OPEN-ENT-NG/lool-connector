@@ -1,5 +1,6 @@
 package fr.openent.lool.bean;
 
+import fr.openent.lool.core.constants.Field;
 import fr.openent.lool.provider.WopiProviders;
 import io.vertx.core.json.JsonObject;
 
@@ -23,7 +24,8 @@ public class WopiConfig {
         this.type = WopiProviders.valueOf(provider.getString("type", null));
         this.server = new URL(provider.getString("url", null));
         this.serverCapabilities = wopiConfig.getJsonObject("server_capabilities", new JsonObject()).getMap();
-        List<String> defaultTemplates = this.type.equals(OnlyOffice) ? Arrays.asList("docx", "pptx", "xlsx") : Arrays.asList("odt", "odp", "ods");
+        List<String> defaultTemplates = this.type.equals(OnlyOffice) ? Arrays.asList(Field.DOCX, Field.PPTX, Field.XLSX) :
+                Arrays.asList(Field.ODT, Field.ODP, Field.ODS);
         this.templates = wopiConfig.containsKey("templates") ? wopiConfig.getJsonArray("templates").getList() : defaultTemplates;
         this.duration_token = wopiConfig.getLong("hour-duration-token", 10L);
     }
