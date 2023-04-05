@@ -1,5 +1,5 @@
     {
-      "name": "fr.openent~lool~1.1.1",
+      "name": "fr.openent~lool~1.1.2",
       "config": {
         "main" : "fr.openent.lool.Lool",
         "port" : 8333,
