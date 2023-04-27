@@ -96,6 +96,7 @@ public class LoolController extends ControllerHelper {
                                             .put("redirection", event.right().getValue())
                                             .put("document-id", token.getDocument())
                                             .put("access-token", token.getId())
+                                            .put("server", wopiConfig.server().toString())
                                             .put("resync", request.params().contains("resync") ? request.getParam("resync") : false)
                                             .put("provider-name",Wopi.getInstance().provider().type())
                                             .put("duration-token",duration_token + ts.getTime());
