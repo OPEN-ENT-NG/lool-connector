@@ -32,6 +32,7 @@ import org.entcore.common.bus.WorkspaceHelper;
 import org.entcore.common.controller.ControllerHelper;
 import org.entcore.common.events.EventStore;
 import org.entcore.common.events.EventStoreFactory;
+import org.entcore.common.http.filter.AdminFilter;
 import org.entcore.common.http.filter.ResourceFilter;
 import org.entcore.common.http.filter.SuperAdminFilter;
 import org.entcore.common.storage.Storage;
@@ -70,6 +71,13 @@ public class LoolController extends ControllerHelper {
     @SecuredAction("view")
     public void render(HttpServerRequest request) {
         renderView(request, new JsonObject(), "lool-home.html", null);
+    }
+
+    @Get("/config")
+    @SecuredAction(value = "", type = ActionType.RESOURCE)
+    @ResourceFilter(AdminFilter.class)
+    public void getConfig(final HttpServerRequest request) {
+        renderJson(request, config);
     }
 
     @Get("/documents/:id/open")
