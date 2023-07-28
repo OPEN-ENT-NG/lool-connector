@@ -11,7 +11,7 @@ interface ViewModel {
     },
     workspaceTrees: Tree[],
     listFolders: any,
-    openedFolder: Array<Element>,
+    openedFolders: Array<Element>,
     selectedFolder: Element,
     documentTypeList: any[],
     eventer: Eventer,
@@ -42,7 +42,7 @@ export const homeController = ng.controller('HomeController', ['$scope',
         };
         vm.workspaceTrees = [];
         vm.listFolders = {};
-        vm.openedFolder = [];
+        vm.openedFolders = [];
         vm.selectedFolder = null;
         vm.documentTypeList = [];
         vm.display = {
@@ -71,7 +71,7 @@ export const homeController = ng.controller('HomeController', ['$scope',
                     return false;
                 },
                 isOpenedFolder(folder: Element): boolean {
-                    return vm.openedFolder.some((openFolder: Element) => openFolder === folder);
+                    return vm.openedFolders.some((openFolder: Element) => openFolder === folder);
                 },
                 isSelectedFolder(folder: Element) {
                     return vm.selectedFolder === folder;
@@ -80,11 +80,10 @@ export const homeController = ng.controller('HomeController', ['$scope',
                     vm.newDocument.folder = folder._id;
                     vm.selectedFolder = folder;
                     if (!this.isOpenedFolder(folder)) {
-                        vm.openedFolder = vm.openedFolder.filter((e: Element) => e != folder);
-                        vm.openedFolder.push(folder);
+                        vm.openedFolders.push(folder);
                     }
                     else {
-                        vm.openedFolder = vm.openedFolder.filter((e: Element) => e != folder);
+                        vm.openedFolders = vm.openedFolders.filter((e: Element) => e != folder);
                     }
                 },
             }
