@@ -11,7 +11,7 @@ interface ViewModel {
     },
     workspaceTrees: Tree[],
     listFolders: any,
-    openedFolder: Element,
+    openedFolders: Array<Element>,
     selectedFolder: Element,
     documentTypeList: any[],
     eventer: Eventer,
@@ -42,7 +42,7 @@ export const homeController = ng.controller('HomeController', ['$scope',
         };
         vm.workspaceTrees = [];
         vm.listFolders = {};
-        vm.openedFolder = null;
+        vm.openedFolders = [];
         vm.selectedFolder = null;
         vm.documentTypeList = [];
         vm.display = {
@@ -70,24 +70,22 @@ export const homeController = ng.controller('HomeController', ['$scope',
                 isDisabled(folder) {
                     return false;
                 },
-                isOpenedFolder(folder) {
-                    if (vm.openedFolder === folder) {
-                        return true;
-                    }
-                    else if ((folder as Tree).filter) {
-                        if (!workspace.v2.service.isLazyMode()){
-                            return true;
-                        }
-                    }
-                    return vm.openedFolder && workspace.v2.service.findFolderInTreeByRefOrId(folder, vm.openedFolder);
+                isOpenedFolder(folder: Element): boolean {
+                    return vm.openedFolders.some((openFolder: Element) => openFolder === folder);
                 },
-                isSelectedFolder(folder) {
+                isSelectedFolder(folder: Element) {
                     return vm.selectedFolder === folder;
                 },
-                openFolder(folder) {
+                openFolder(folder: Element) {
                     vm.newDocument.folder = folder._id;
-                    vm.openedFolder = vm.selectedFolder = folder;
-                }
+                    vm.selectedFolder = folder;
+                    if (!this.isOpenedFolder(folder)) {
+                        vm.openedFolders.push(folder);
+                    }
+                    else {
+                        vm.openedFolders = vm.openedFolders.filter((e: Element) => e != folder);
+                    }
+                },
             }
 
             const {templates} = Behaviours.applicationsBehaviours[BEHAVIOURS_NAME].provider;
