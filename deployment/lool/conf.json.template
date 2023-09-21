@@ -16,8 +16,8 @@
         "entcore.port" : 8009,
         "wopi": {
             "provider": {
-                "type": "",
-                "url": ""
+                "type": "${loolTypeProvider}",
+                "url": "${loolUrlProvider}"
             },
             "hour-duration-token": 10,
             "templates": ["odt", "odp", "ods"],
