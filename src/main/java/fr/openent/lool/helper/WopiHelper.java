@@ -6,6 +6,7 @@ import fr.openent.lool.bean.ActionURL;
 import fr.openent.lool.bean.Token;
 import fr.openent.lool.core.constants.Field;
 import fr.openent.lool.provider.Wopi;
+import fr.openent.lool.provider.WopiProviders;
 import fr.openent.lool.utils.Bindings;
 import fr.wseduc.mongodb.MongoDb;
 import fr.wseduc.mongodb.MongoQueryBuilder;
@@ -29,6 +30,7 @@ import org.entcore.common.mongodb.MongoDbResult;
 import org.entcore.common.user.UserUtils;
 
 import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -41,11 +43,13 @@ public class WopiHelper {
     private final HttpHelper httpHelper;
     private final HttpClient httpClient;
     private final EventBus eb;
+    private final String providerId;
 
-    public WopiHelper(Vertx vertx) {
+    public WopiHelper(Vertx vertx, URL url, WopiProviders type, String providerId) {
         this.httpHelper = new HttpHelper(vertx);
         this.eb = vertx.eventBus();
-        this.httpClient = httpHelper.generateHttpClient(Wopi.getInstance().config().server(), Wopi.getInstance().config().type());
+        this.httpClient = httpHelper.generateHttpClient(url, type);
+        this.providerId = providerId;
     }
 
     /**
@@ -87,7 +91,8 @@ public class WopiHelper {
             return;
         }
         JsonObject filter = new JsonObject()
-                .put("content-type", contentType);
+                .put("content-type", contentType)
+                .put("providerId", this.providerId);
 
         if (action != null) {
             filter.put("action", action);
@@ -117,7 +122,7 @@ public class WopiHelper {
      *
      * @param handler Function handler returning data
      */
-    public void discover(Handler<Boolean> handler) {
+    public void discover(Wopi wopi, Handler<Boolean> handler) {
         String discoverUri = "/hosting/discovery";
         HttpClientRequest req = httpClient.get(discoverUri, response -> {
             if (response.statusCode() != 200) {
@@ -125,7 +130,7 @@ public class WopiHelper {
             } else {
                 Buffer responseBuffer = new BufferImpl();
                 response.handler(responseBuffer::appendBuffer);
-                response.endHandler(aVoid -> parseDiscover(responseBuffer, handler));
+                response.endHandler(aVoid -> parseDiscover(wopi, responseBuffer, handler));
                 response.exceptionHandler(throwable -> {
                     log.error(throwable);
                     handler.handle(false);
@@ -142,9 +147,9 @@ public class WopiHelper {
      * @param buffer  discover file
      * @param handler Function handler returning data
      */
-    private void parseDiscover(Buffer buffer, Handler<Boolean> handler) {
-        JsonArray actions = Wopi.getInstance().provider().parseDiscovery(buffer);
-        MongoDb.getInstance().delete(DISCOVER_COLLECTION, new JsonObject(), MongoDbResult.validResultHandler(delete -> {
+    private void parseDiscover(Wopi wopi, Buffer buffer, Handler<Boolean> handler) {
+        JsonArray actions = wopi.provider().parseDiscovery(wopi.id(), buffer);
+        MongoDb.getInstance().delete(DISCOVER_COLLECTION, new JsonObject().put("providerId", wopi.id()), MongoDbResult.validResultHandler(delete -> {
             if (delete.isLeft()) {
                 handler.handle(Boolean.FALSE);
                 return;
@@ -266,7 +271,7 @@ public class WopiHelper {
      */
     public Future<JsonArray> getCapabilities() {
         Promise<JsonArray> promise = Promise.promise();
-        JsonObject query = new JsonObject();
+        JsonObject query = new JsonObject().put("providerId", this.providerId);
         JsonObject sort = new JsonObject();
         JsonObject keys = new JsonObject()
                 .put("content-type", 1)

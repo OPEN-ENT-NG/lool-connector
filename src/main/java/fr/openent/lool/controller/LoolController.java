@@ -6,7 +6,9 @@ import fr.openent.lool.bean.Token;
 import fr.openent.lool.bean.WopiConfig;
 import fr.openent.lool.core.constants.Field;
 import fr.openent.lool.helper.TraceHelper;
+import fr.openent.lool.helper.WopiHelper;
 import fr.openent.lool.provider.Wopi;
+import fr.openent.lool.provider.WopisProviders;
 import fr.openent.lool.service.DocumentService;
 import fr.openent.lool.service.FileService;
 import fr.openent.lool.service.Impl.DefaultDocumentService;
@@ -21,6 +23,7 @@ import fr.wseduc.security.ActionType;
 import fr.wseduc.security.SecuredAction;
 import fr.wseduc.webutils.Either;
 import fr.wseduc.webutils.data.FileResolver;
+import fr.wseduc.webutils.http.Renders;
 import fr.wseduc.webutils.request.CookieHelper;
 import io.vertx.core.Handler;
 import io.vertx.core.buffer.Buffer;
@@ -54,16 +57,14 @@ public class LoolController extends ControllerHelper {
     private final TokenService tokenService;
     private final EventStore eventStore;
     private final WorkspaceHelper workspaceHelper;
-    private final WopiConfig wopiConfig;
 
-    public LoolController(EventBus eb, Storage storage, WopiConfig wopiConfig) {
+    public LoolController(EventBus eb, Storage storage) {
         super();
         documentService = new DefaultDocumentService(eb, storage);
         fileService = new DefaultFileService(storage);
         tokenService = new DefaultTokenService();
         eventStore = EventStoreFactory.getFactory().getEventStore(Lool.class.getSimpleName());
         this.workspaceHelper = new WorkspaceHelper(eb, storage);
-        this.wopiConfig = wopiConfig;
     }
 
     @Get("")
@@ -89,24 +90,25 @@ public class LoolController extends ControllerHelper {
                 unauthorized(request);
                 return;
             }
-            Wopi.getInstance().helper().generateLoolToken(request, tokenEvent -> {
+            final Wopi wopiService = WopisProviders.getProvider(Renders.getHost(request));
+            wopiService.helper().generateLoolToken(request, tokenEvent -> {
                 if (tokenEvent.isRight()) {
                     Token token = tokenEvent.right().getValue();
                     documentService.get(token.getDocument(), result -> {
                         if (result.isRight()) {
                             JsonObject document = result.right().getValue();
-                            getRedirectionUrl(request, document, event -> {
+                            getRedirectionUrl(request, document, wopiService, event -> {
                                 if (event.isRight()) {
                                     Timestamp ts = Timestamp.from(Instant.now());
-                                    Duration d = Duration.ofHours(wopiConfig.duration_token());
+                                    Duration d = Duration.ofHours(wopiService.config().duration_token());
                                     long duration_token = d.toMillis();
                                     JsonObject params = new JsonObject()
                                             .put("redirection", event.right().getValue())
                                             .put("document-id", token.getDocument())
                                             .put("access-token", token.getId())
-                                            .put("server", wopiConfig.server().toString())
+                                            .put("server", wopiService.config().server().toString())
                                             .put("resync", request.params().contains("resync") ? request.getParam("resync") : false)
-                                            .put("provider-name",Wopi.getInstance().provider().type())
+                                            .put("provider-name",wopiService.provider().type())
                                             .put("duration-token",duration_token + ts.getTime());
                                     renderView(request, params, "doc.html", null);
                                     eventStore.createAndStoreEvent(Actions.ACCESS.name(), request);
@@ -134,11 +136,11 @@ public class LoolController extends ControllerHelper {
      * @param document Document
      * @param handler Function handler returning data
      */
-    private void getRedirectionUrl(HttpServerRequest request, JsonObject document, Handler<Either<String, String>> handler) {
-        Wopi.getInstance().helper().getActionUrl(document.getJsonObject(Field.METADATA).getString("content-type"), null, event -> {
+    private void getRedirectionUrl(HttpServerRequest request, JsonObject document, Wopi wopiService, Handler<Either<String, String>> handler) {
+        wopiService.helper().getActionUrl(document.getJsonObject(Field.METADATA).getString("content-type"), null, event -> {
             if (event.isRight()) {
                 ActionURL actionURL = event.right().getValue();
-                handler.handle(new Either.Right<>(Wopi.getInstance().provider().redirectURL(request, actionURL, document)));
+                handler.handle(new Either.Right<>(wopiService.provider().redirectURL(request, actionURL, document, wopiService)));
             } else {
                 String message = "[LoolController@redirectToLool] Failed to redirect to Libre Office Online for document " + document.getString(Field._ID);
                 log.error(message, event.left().getValue());
@@ -151,16 +153,17 @@ public class LoolController extends ControllerHelper {
     @ApiDoc("Get Wopi provider context")
     @SecuredAction(value = "", type = ActionType.AUTHENTICATED)
     public void getCapabilities(HttpServerRequest request) {
-        Wopi.getInstance().helper().getCapabilities()
+        final Wopi wopiService = WopisProviders.getProvider(Renders.getHost(request));
+        wopiService.helper().getCapabilities()
                 .onFailure(failure -> {
                     log.error("Fail to fetch wopi provider capabilities", failure);
                     renderError(request);
                 })
                 .onSuccess(capabilities -> {
                     JsonObject body = new JsonObject()
-                            .put("provider", Wopi.getInstance().provider().type())
+                            .put("provider", wopiService.provider().type())
                             .put("capabilities", capabilities)
-                            .put("templates", Wopi.getInstance().config().templates());
+                            .put("templates", wopiService.config().templates());
                     renderJson(request, body);
                 });
     }
@@ -169,7 +172,8 @@ public class LoolController extends ControllerHelper {
     @ResourceFilter(SuperAdminFilter.class)
     @SecuredAction(value ="", type = ActionType.RESOURCE)
     public void discover(HttpServerRequest request) {
-        Wopi.getInstance().helper().discover(aBoolean -> request.response().setStatusCode(201).end("201 Created"));
+        final Wopi wopiService = WopisProviders.getProvider(Renders.getHost(request));
+        wopiService.helper().discover(wopiService, aBoolean -> request.response().setStatusCode(201).end("201 Created"));
     }
 
     @Get("/documents/:id/tokens")
@@ -183,12 +187,13 @@ public class LoolController extends ControllerHelper {
         String accessToken = request.getParam("access_token");
         String image = request.getParam("image");
         String document = request.getParam(Field.ID);
-        Wopi.getInstance().helper().validateToken(accessToken, document, Bindings.CONTRIB.toString(), validation -> {
+        final Wopi wopiService = WopisProviders.getProvider(Renders.getHost(request));
+        wopiService.helper().validateToken(accessToken, document, Bindings.CONTRIB.toString(), validation -> {
             if (!validation.getBoolean("valid")) {
                 unauthorized(request);
                 return;
             }
-            UserUtils.getUserInfos(eb, request, user -> Wopi.getInstance().helper().userCanRead(CookieHelper.getInstance().getSigned("oneSessionId", request), image, canRead -> {
+            UserUtils.getUserInfos(eb, request, user -> wopiService.helper().userCanRead(CookieHelper.getInstance().getSigned("oneSessionId", request), image, canRead -> {
                 if (canRead) {
                     tokenService.create(request.getParam(Field.ID), user.getUserId(), either -> {
                         if (either.isRight()) {
@@ -215,7 +220,8 @@ public class LoolController extends ControllerHelper {
         String imageId = request.getParam("imageId");
         String accessToken = request.getParam("access_token");
         String token = request.getParam(Field.TOKEN);
-        Wopi.getInstance().helper().validateToken(accessToken, documentId, Bindings.CONTRIB.toString(), validation -> {
+        final Wopi wopiService = WopisProviders.getProvider(Renders.getHost(request));
+        wopiService.helper().validateToken(accessToken, documentId, Bindings.CONTRIB.toString(), validation -> {
             if (!validation.getBoolean("valid")) {
                 unauthorized(request);
                 return;
