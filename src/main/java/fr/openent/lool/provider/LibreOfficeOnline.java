@@ -17,10 +17,10 @@ public class LibreOfficeOnline extends WopiProvider {
     }
 
     @Override
-    public String redirectURL(HttpServerRequest request, ActionURL actionURL, JsonObject document) {
+    public String redirectURL(HttpServerRequest request, ActionURL actionURL, JsonObject document, Wopi wopiService) {
         return actionURL.url().getProtocol() + "://" + actionURL.url().getHost() + actionURL.url().getPath() +
-                "?WOPISrc=" + Wopi.getInstance().helper().encodeWopiParam(getScheme(request) + "://" + getHost(request) + "/lool/wopi/files/" + document.getString(Field._ID)) +
-                "&title=" + Wopi.getInstance().helper().encodeWopiParam(document.getString(Field.NAME)) +
+                "?WOPISrc=" + wopiService.helper().encodeWopiParam(getScheme(request) + "://" + getHost(request) + "/lool/wopi/files/" + document.getString(Field._ID)) +
+                "&title=" + wopiService.helper().encodeWopiParam(document.getString(Field.NAME)) +
                 "&lang=fr" +
                 "&closebutton=0" +
                 "&revisionhistory=1";

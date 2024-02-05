@@ -7,23 +7,17 @@ public class Wopi {
     private WopiProvider provider;
     private WopiConfig config;
     private WopiHelper helper;
+    private String id;
+
 
     private Wopi() {
     }
 
-    public static Wopi getInstance() {
-        return WopiHolder.instance;
-    }
-
-    public Wopi init(WopiProvider provider, WopiConfig config) {
+    public Wopi(WopiProvider provider, WopiConfig config,  WopiHelper helper, String id) {
         this.provider = provider;
         this.config = config;
-
-        return this;
-    }
-
-    public void setHelper(WopiHelper helper) {
         this.helper = helper;
+        this.id = id;
     }
 
     public WopiProvider provider() {
@@ -38,11 +32,8 @@ public class Wopi {
         return this.helper;
     }
 
-    private static class WopiHolder {
-        private static final Wopi instance = new Wopi();
-
-        private WopiHolder() {
-            throw new IllegalStateException("Singleton class");
-        }
+    public String id() {
+        return this.id;
     }
+
 }

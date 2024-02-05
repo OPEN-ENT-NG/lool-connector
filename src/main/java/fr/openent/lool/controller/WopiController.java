@@ -5,6 +5,7 @@ import fr.openent.lool.core.constants.Field;
 import fr.openent.lool.helper.DateHelper;
 import fr.openent.lool.helper.TraceHelper;
 import fr.openent.lool.provider.Wopi;
+import fr.openent.lool.provider.WopisProviders;
 import fr.openent.lool.service.DocumentService;
 import fr.openent.lool.service.FileService;
 import fr.openent.lool.service.Impl.DefaultDocumentService;
@@ -19,6 +20,7 @@ import fr.wseduc.rs.Post;
 import fr.wseduc.security.ActionType;
 import fr.wseduc.security.SecuredAction;
 import fr.wseduc.webutils.Either;
+import fr.wseduc.webutils.http.Renders;
 import io.vertx.core.Handler;
 import io.vertx.core.eventbus.EventBus;
 import io.vertx.core.http.HttpServerRequest;
@@ -44,14 +46,15 @@ public class WopiController extends ControllerHelper {
     public void checkFileInfo(HttpServerRequest request) {
         String loolToken = request.params().get("access_token");
         String documentId = request.params().get(Field.ID);
-        Wopi.getInstance().helper().validateToken(loolToken, documentId, Bindings.READ.toString(), validationObject -> {
+        final Wopi wopiService = WopisProviders.getProvider(Renders.getHost(request));
+        wopiService.helper().validateToken(loolToken, documentId, Bindings.READ.toString(), validationObject -> {
             if (Boolean.FALSE.equals(validationObject.getBoolean("valid"))) {
                 unauthorized(request);
                 return;
             }
 
             Token token = new Token(validationObject.getJsonObject(Field.TOKEN));
-            Wopi.getInstance().helper().userCanWrite(token.getSessionId(), token.getDocument(), canWrite ->
+            wopiService.helper().userCanWrite(token.getSessionId(), token.getDocument(), canWrite ->
                 documentService.get(request.getParam(Field.ID), event -> {
                     if (event.isRight()) {
                         JsonObject document = event.right().getValue();
@@ -69,7 +72,7 @@ public class WopiController extends ControllerHelper {
                                 .put(Field.USERCANWRITE, canWrite);
 
                         // Merge server capabilities into wopi response config
-                        response.mergeIn(new JsonObject(Wopi.getInstance().config().serverCapabilities()));
+                        response.mergeIn(new JsonObject(wopiService.config().serverCapabilities()));
                         renderJson(request, response);
                     } else {
                         badRequest(request);
@@ -82,7 +85,8 @@ public class WopiController extends ControllerHelper {
     @Get("/wopi/files/:id/contents")
     public void getFile(HttpServerRequest request) {
         String documentId = request.getParam(Field.ID);
-        Wopi.getInstance().helper().validateToken(request.getParam("access_token"), documentId, Bindings.READ.toString(), validation -> {
+        final Wopi wopiService = WopisProviders.getProvider(Renders.getHost(request));
+        wopiService.helper().validateToken(request.getParam("access_token"), documentId, Bindings.READ.toString(), validation -> {
             if (Boolean.FALSE.equals(validation.getBoolean("valid"))) {
                 unauthorized(request);
                 return;
@@ -110,7 +114,8 @@ public class WopiController extends ControllerHelper {
         request.pause();
         boolean isAutoSave = Boolean.parseBoolean(request.getHeader(Headers.AUTO_SAVE.toString()));
         boolean isExitSave = request.headers().contains(Headers.EXIT_SAVE.toString()) && Boolean.parseBoolean(request.headers().get(Headers.EXIT_SAVE.toString()));
-        Wopi.getInstance().helper().validateToken(request.params().get("access_token"), request.params().get(Field.ID), Bindings.CONTRIB.toString(), validation -> {
+        final Wopi wopiService = WopisProviders.getProvider(Renders.getHost(request));
+        wopiService.helper().validateToken(request.params().get("access_token"), request.params().get(Field.ID), Bindings.CONTRIB.toString(), validation -> {
             if (Boolean.FALSE.equals(validation.getBoolean("valid")) && !isExitSave) {
                 unauthorized(request);
                 return;
@@ -140,7 +145,7 @@ public class WopiController extends ControllerHelper {
                         if (isAutoSave || isExitSave) {
                             documentService.updateRevisionId(request.getParam(Field.ID), storageBody.getString(Field._ID), updateHandler);
                             if (isExitSave) {
-                                Wopi.getInstance().helper().deleteToken(token.getId(), either -> {
+                                wopiService.helper().deleteToken(token.getId(), either -> {
                                     if (either.isLeft()) {
                                         log.error("Failed to delete token on exit save");
                                     }
@@ -161,16 +166,17 @@ public class WopiController extends ControllerHelper {
     @Delete("/wopi/documents/:id/tokens/:token")
     @SecuredAction(value = "", type = ActionType.AUTHENTICATED)
     public void invalidateToken(HttpServerRequest request) {
-        if (Boolean.FALSE.equals(Wopi.getInstance().provider().revokeToken())) {
+        final Wopi wopiService = WopisProviders.getProvider(Renders.getHost(request));
+        if (Boolean.FALSE.equals(wopiService.provider().revokeToken())) {
             ok(request);
             return;
         }
 
         String documentId = request.getParam(Field.ID);
         String accessToken = request.getParam(Field.TOKEN);
-        UserUtils.getUserInfos(eb, request, user -> Wopi.getInstance().helper().isUserToken(user.getUserId(), accessToken, documentId, isUserToken -> {
+        UserUtils.getUserInfos(eb, request, user -> wopiService.helper().isUserToken(user.getUserId(), accessToken, documentId, isUserToken -> {
             if (Boolean.TRUE.equals(isUserToken)) {
-                Wopi.getInstance().helper().invalidateToken(accessToken, defaultResponseHandler(request));
+                wopiService.helper().invalidateToken(accessToken, defaultResponseHandler(request));
             } else {
                 unauthorized(request);
             }

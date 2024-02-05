@@ -22,7 +22,7 @@ import java.io.StringReader;
 import java.net.URL;
 
 public abstract class WopiProvider {
-    private final Logger log = LoggerFactory.getLogger(WopiProvider.class);
+    private final static Logger log = LoggerFactory.getLogger(WopiProvider.class);
     private final URL url;
     private final WopiProviders type;
 
@@ -31,7 +31,7 @@ public abstract class WopiProvider {
         this.url = url;
     }
 
-    public abstract String redirectURL(HttpServerRequest request, ActionURL actionURL, JsonObject document);
+    public abstract String redirectURL(HttpServerRequest request, ActionURL actionURL, JsonObject document, Wopi wopiService);
 
     public URL url() {
         return this.url;
@@ -45,7 +45,7 @@ public abstract class WopiProvider {
         return true;
     }
 
-    public JsonArray parseDiscovery(Buffer buffer) {
+    public static JsonArray parseDiscovery(String providerId, Buffer buffer) {
         JsonArray result = new JsonArray();
         try (StringReader reader = new StringReader(new String(buffer.getBytes()))) {
             DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
@@ -71,6 +71,7 @@ public abstract class WopiProvider {
                                     .put("extension", extension)
                                     .put("action", actionName)
                                     .put("url", urlSrc)
+                                    .put("providerId", providerId)
                     );
                 }
             }
