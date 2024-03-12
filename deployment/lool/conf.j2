@@ -16,31 +16,33 @@
         "entcore.port" : 8009,
         {% if (loolProvider is defined) %}
             "wopi": {
-            "provider": {
-                "type": "{{ loolProvider }}",
-                "url": "{{ loolServer }}"
+                "provider": {
+                    "type": "{{ loolProvider }}",
+                    "url": "{{ loolServer }}"
+                },
+                "hour-duration-token": 12,
+                "templates": {{ loolTemplates|default('["odt", "odp", "ods"]') }},
+                "server_capabilities": {
+                    "DisableCopy": {{ loolDisableCopy|default('false') }},
+                    "DisablePrint": {{ loolDisablePrint|default('false') }},
+                    "DisableExport": {{ loolDisableExport|default('false') }},
+                    "HideExportOption": {{ loolHideExportOption|default('false') }},
+                    "DisableInactiveMessages": {{ loolDisableInactiveMessages|default('false') }},
+                    "HideUserList": {{ loolHideUserList|default('false') }},
+                    "HideSaveOption": {{ loolHideSaveOption|default('false') }},
+                    "EnableShare": {{ loolEnableShare|default('false') }},
+                    "EnableInsertRemoteImage": {{ loolEnableInsertRemoteImage|default('true') }},
+                    "HidePrintOption": {{ loolHidePrintOption|default('false') }},
+                    "UserCanNotWriteRelative": {{ loolUserCanNotWriteRelative|default('true') }},
+                    "EnableOwnerTermination": {{ loolEnableOwnerTermination|default('false') }}
+                }
             },
-            "hour-duration-token": 12,
-            "templates": {{ loolTemplates|default('["odt", "odp", "ods"]') }},
-            "server_capabilities": {
         {% else %}
-            "lool-server": "{{ loolServer }}",
-            "lool-config": {
+            "wopi": {
+               "providers" : {{ loolProviders }},
+               "mappings" : {{ loolMappings }}
+            },
         {% endif %}
-            "DisableCopy": {{ loolDisableCopy|default('false') }},
-            "DisablePrint": {{ loolDisablePrint|default('false') }},
-            "DisableExport": {{ loolDisableExport|default('false') }},
-            "HideExportOption": {{ loolHideExportOption|default('false') }},
-            "DisableInactiveMessages": {{ loolDisableInactiveMessages|default('false') }},
-            "HideUserList": {{ loolHideUserList|default('false') }},
-            "HideSaveOption": {{ loolHideSaveOption|default('false') }},
-            "EnableShare": {{ loolEnableShare|default('false') }},
-            "EnableInsertRemoteImage": {{ loolEnableInsertRemoteImage|default('true') }},
-            "HidePrintOption": {{ loolHidePrintOption|default('false') }},
-            "UserCanNotWriteRelative": {{ loolUserCanNotWriteRelative|default('true') }},
-            "EnableOwnerTermination": {{ loolEnableOwnerTermination|default('false') }}
-        {% if (loolProvider is defined) %} } {% endif %}
-        },
 		"publicConf": {
 			"xiti": {
 				"ID_SERVICE": {
