@@ -23,7 +23,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 public final class WopisProviders {
-    private static Map<String, Wopi> mapWopiProviders = new HashMap<>();
+    private static final Map<String, Wopi> mapWopiProviders = new HashMap<>();
     /**
      * The Constructor.
      */
@@ -35,7 +35,9 @@ public final class WopisProviders {
     }
 
     public static Wopi getProvider(String host) {
-        return mapWopiProviders.get(host);
+        final Wopi wopi = mapWopiProviders.get(host);
+        if (wopi == null) return getFistProvider();
+        return wopi;
     }
 
     public static Wopi getFistProvider() {
