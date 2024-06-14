@@ -5,6 +5,7 @@ import fr.openent.lool.core.constants.Field;
 import fr.openent.lool.helper.DateHelper;
 import fr.openent.lool.helper.TraceHelper;
 import fr.openent.lool.provider.Wopi;
+import fr.openent.lool.provider.WopiProviders;
 import fr.openent.lool.provider.WopisProviders;
 import fr.openent.lool.service.DocumentService;
 import fr.openent.lool.service.FileService;
@@ -46,7 +47,8 @@ public class WopiController extends ControllerHelper {
     public void checkFileInfo(HttpServerRequest request) {
         String loolToken = request.params().get("access_token");
         String documentId = request.params().get(Field.ID);
-        final Wopi wopiService = WopisProviders.getProvider(Renders.getHost(request));
+        final String host = Renders.getHost(request);
+        final Wopi wopiService = WopisProviders.getProvider(host);
         wopiService.helper().validateToken(loolToken, documentId, Bindings.READ.toString(), validationObject -> {
             if (Boolean.FALSE.equals(validationObject.getBoolean("valid"))) {
                 unauthorized(request);
@@ -70,6 +72,10 @@ public class WopiController extends ControllerHelper {
                                 .put(Field.VERSION, DateHelper.getDateString(document.getString(Field.MODIFIED), DateHelper.MONGO_DATE_FORMAT, DateHelper.SQL_FORMAT))
                                 .put(Field.LASTMODIFIEDTIME, DateHelper.getDateString(document.getString(Field.MODIFIED), DateHelper.MONGO_DATE_FORMAT, DateHelper.SQL_FORMAT))
                                 .put(Field.USERCANWRITE, canWrite);
+
+                        //fix insert image in OnlyOffice
+                        if (WopiProviders.OnlyOffice.equals(wopiService.provider().type()))
+                            response.put(Field.POSTMESSAGEORIGIN, Renders.getScheme(request)  + "://" + host);
 
                         // Merge server capabilities into wopi response config
                         response.mergeIn(new JsonObject(wopiService.config().serverCapabilities()));
