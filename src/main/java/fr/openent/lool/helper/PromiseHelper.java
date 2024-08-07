@@ -1,24 +1,24 @@
 package fr.openent.lool.helper;
 
 import fr.openent.lool.core.constants.Field;
-import io.vertx.core.Future;
 import io.vertx.core.Handler;
+import io.vertx.core.Promise;
 import io.vertx.core.eventbus.Message;
 import io.vertx.core.json.JsonObject;
 
-public class FutureHelper {
+public class PromiseHelper {
     /**
-     * Returns future handler. It used to manage future callback
+     * Returns promise handler. It used to manage promise callback
      *
-     * @param future Future
+     * @param promise Promise
      * @return Message handler
      */
-    public static Handler<Message<JsonObject>> getFutureHandler(Future<JsonObject> future) {
+    public static Handler<Message<JsonObject>> getPromiseHandler(Promise<JsonObject> promise) {
         return event -> {
             if (Field.OK.equals(event.body().getString(Field.STATUS))) {
-                future.complete(event.body());
+                promise.complete(event.body());
             } else {
-                future.fail(event.body().getString("message"));
+                promise.fail(event.body().getString("message"));
             }
         };
     }

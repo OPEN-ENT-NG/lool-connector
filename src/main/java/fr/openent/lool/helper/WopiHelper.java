@@ -19,9 +19,7 @@ import io.vertx.core.Vertx;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.core.buffer.impl.BufferImpl;
 import io.vertx.core.eventbus.EventBus;
-import io.vertx.core.http.HttpClient;
-import io.vertx.core.http.HttpClientRequest;
-import io.vertx.core.http.HttpServerRequest;
+import io.vertx.core.http.*;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.core.logging.Logger;
@@ -124,21 +122,30 @@ public class WopiHelper {
      */
     public void discover(Wopi wopi, Handler<Boolean> handler) {
         String discoverUri = "/hosting/discovery";
-        HttpClientRequest req = httpClient.get(discoverUri, response -> {
-            if (response.statusCode() != 200) {
-                log.error("[WopiHelper@discover] An error occurred when discovering wopi api.");
-            } else {
-                Buffer responseBuffer = new BufferImpl();
-                response.handler(responseBuffer::appendBuffer);
-                response.endHandler(aVoid -> parseDiscover(wopi, responseBuffer, handler));
-                response.exceptionHandler(throwable -> {
-                    log.error(throwable);
-                    handler.handle(false);
-                });
-            }
-        });
 
-        req.end();
+        RequestOptions requestOptions = new RequestOptions()
+                .setAbsoluteURI(discoverUri);
+
+        httpClient.request(requestOptions)
+            .flatMap(HttpClientRequest::send)
+            .onSuccess(response ->{
+                if (response.statusCode() != 200) {
+                    log.error("[Lool@WopiHelper::discover] An error occurred when discovering wopi api.");
+                    handler.handle(false);
+                } else {
+                    Buffer responseBuffer = new BufferImpl();
+                    response.handler(responseBuffer::appendBuffer);
+                    response.endHandler(aVoid -> parseDiscover(wopi, responseBuffer, handler));
+                    response.exceptionHandler(throwable -> {
+                        log.error("[LOOL@WopiHelper::discover] Fail to request : " + throwable);
+                        handler.handle(false);
+                    });
+                }
+            })
+            .onFailure(err -> {
+                log.error("[LOOL@WopiHelper::discover] Error on request: " + err.getMessage());
+                handler.handle(false);
+            });
     }
 
     /**
