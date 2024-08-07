@@ -16,3 +16,6 @@ node_modules
 /src/main/resources/public/template/entcore/
 /coverage/front/cobertura-coverage.xml
 /package-lock.json
+.env
+target
+dependency-reduced-pom.xml
