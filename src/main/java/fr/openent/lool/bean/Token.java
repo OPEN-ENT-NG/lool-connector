@@ -36,7 +36,7 @@ public class Token {
                 JsonObject action = new JsonObject()
                         .put("action", "getDocument")
                         .put(Field.ID, this.document);
-                eb.send("org.entcore.workspace", action, handlerToAsyncHandler(message -> {
+                eb.request("org.entcore.workspace", action, handlerToAsyncHandler(message -> {
                     JsonObject body = message.body();
                     if (!Field.OK.equals(body.getString(Field.STATUS))) {
                         handler.handle(new Either.Left<>("[Token@contructor] An error occurred when calling document"));

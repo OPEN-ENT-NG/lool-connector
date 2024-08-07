@@ -1,5 +1,5 @@
     {
-      "name": "fr.openent~lool~1.2-SNAPSHOT",
+      "name": "fr.openent~lool~2.0-b2school-SNAPSHOT",
       "config": {
         "main" : "fr.openent.lool.Lool",
         "port" : 8333,
