@@ -125,7 +125,7 @@ public class WopiHelper {
         String discoverUri = "/hosting/discovery";
 
         RequestOptions requestOptions = new RequestOptions()
-                .setAbsoluteURI(discoverUri);
+                .setURI(discoverUri);
 
         httpClient.request(requestOptions)
                 .flatMap(HttpClientRequest::send)
