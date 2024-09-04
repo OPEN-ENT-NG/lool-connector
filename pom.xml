@@ -27,7 +27,6 @@
         </repository>
     </repositories>
     <properties>
-        <vertxVersion>4.5.5</vertxVersion>
         <toolsVersion>2.0.0-final</toolsVersion>
         <junitVersion>5.1.0</junitVersion>
         <powerMockVersion>2.0.2</powerMockVersion>
