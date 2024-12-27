@@ -11,6 +11,7 @@ import fr.openent.lool.provider.Wopi;
 import fr.openent.lool.provider.WopiProvider;
 import fr.openent.lool.provider.WopiProviderFactory;
 import fr.openent.lool.provider.WopisProviders;
+import io.vertx.core.Promise;
 import io.vertx.core.eventbus.EventBus;
 import io.vertx.core.json.JsonObject;
 import org.entcore.common.http.BaseServer;
@@ -26,8 +27,8 @@ public class Lool extends BaseServer {
     private static final int WAITING_TIME = 30000;
 
     @Override
-    public void start() throws Exception {
-        super.start();
+    public void start(Promise<Void> startPromise) throws Exception {
+        super.start(startPromise);
 
         final JsonObject wopi = config.getJsonObject("wopi", new JsonObject());
         final List<Wopi> wopiDiscover = new ArrayList<>();
@@ -87,6 +88,9 @@ public class Lool extends BaseServer {
         addController(loolController);
         addController(new WopiController(eb, storage));
         addController(new MonitoringController());
+
+        startPromise.tryComplete();
+        startPromise.tryFail("[LOOL@Lool::start] Fail to start Lool");
 
         for (Wopi wp : wopiDiscover) {
             vertx.setTimer(WAITING_TIME, aLong -> wp.helper().discover(wp, status -> log.info(wp.config().type().name() + " discover " + wp.id() + (Boolean.TRUE.equals(status) ? " OK" : " KO"))));

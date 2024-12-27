@@ -1,7 +1,7 @@
 package fr.openent.lool.helper;
 
 import com.mongodb.DBObject;
-import com.mongodb.QueryBuilder;
+import com.mongodb.client.model.Filters;
 import fr.openent.lool.bean.ActionURL;
 import fr.openent.lool.bean.Token;
 import fr.openent.lool.core.constants.Field;
@@ -19,13 +19,12 @@ import io.vertx.core.Vertx;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.core.buffer.impl.BufferImpl;
 import io.vertx.core.eventbus.EventBus;
-import io.vertx.core.http.HttpClient;
-import io.vertx.core.http.HttpClientRequest;
-import io.vertx.core.http.HttpServerRequest;
+import io.vertx.core.http.*;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
+import org.bson.conversions.Bson;
 import org.entcore.common.mongodb.MongoDbResult;
 import org.entcore.common.user.UserUtils;
 
@@ -124,21 +123,30 @@ public class WopiHelper {
      */
     public void discover(Wopi wopi, Handler<Boolean> handler) {
         String discoverUri = "/hosting/discovery";
-        HttpClientRequest req = httpClient.get(discoverUri, response -> {
-            if (response.statusCode() != 200) {
-                log.error("[WopiHelper@discover] An error occurred when discovering wopi api.");
-            } else {
-                Buffer responseBuffer = new BufferImpl();
-                response.handler(responseBuffer::appendBuffer);
-                response.endHandler(aVoid -> parseDiscover(wopi, responseBuffer, handler));
-                response.exceptionHandler(throwable -> {
-                    log.error(throwable);
+
+        RequestOptions requestOptions = new RequestOptions()
+                .setURI(discoverUri);
+
+        httpClient.request(requestOptions)
+                .flatMap(HttpClientRequest::send)
+                .onSuccess(response ->{
+                    if (response.statusCode() != 200) {
+                        log.error("[Lool@WopiHelper::discover] An error occurred when discovering wopi api.");
+                        handler.handle(false);
+                    } else {
+                        Buffer responseBuffer = new BufferImpl();
+                        response.handler(responseBuffer::appendBuffer);
+                        response.endHandler(aVoid -> parseDiscover(wopi, responseBuffer, handler));
+                        response.exceptionHandler(throwable -> {
+                            log.error("[LOOL@WopiHelper::discover] Fail to request : " + throwable);
+                            handler.handle(false);
+                        });
+                    }
+                })
+                .onFailure(err -> {
+                    log.error("[LOOL@WopiHelper::discover] Error on request: " + err.getMessage());
                     handler.handle(false);
                 });
-            }
-        });
-
-        req.end();
     }
 
     /**
@@ -178,9 +186,9 @@ public class WopiHelper {
      * @param handler    Function handler returning data
      */
     public void validateToken(String tokenId, String documentId, String right, Handler<JsonObject> handler) {
-        QueryBuilder query = new QueryBuilder().and(
-                QueryBuilder.start(Field._ID).is(tokenId).get(),
-                QueryBuilder.start("document").is(documentId).get()
+        Bson query = Filters.and(
+                Filters.eq(Field._ID, tokenId),
+                Filters.eq("document", documentId)
         );
         MongoDb.getInstance().findOne(TOKEN_COLLECTION, MongoQueryBuilder.build(query), message -> {
             Either<String, JsonObject> tokenEvent = Utils.validResult(message);
@@ -244,21 +252,27 @@ public class WopiHelper {
                 return;
             }
 
-            List<DBObject> groups = new ArrayList<>();
-            groups.add(QueryBuilder.start("userId").is(session.getString("userId"))
-                    .put(right).is(true).get());
+            List<Bson> groups = new ArrayList<>();
+            groups.add(Filters.and(
+                    Filters.eq("userId", session.getString("userId")),
+                    Filters.eq(right, true)
+
+            ));
             JsonArray groupsIds = session.getJsonArray("groupsIds");
             for (int i = 0; i < groupsIds.size(); i++) {
                 String gpId = groupsIds.getString(i);
-                groups.add(QueryBuilder.start("groupId").is(gpId)
-                        .put(right).is(true).get());
+                groups.add(Filters.and(
+                        Filters.eq("groupId", gpId),
+                        Filters.eq(right, true)
+                ));
             }
-            QueryBuilder query = QueryBuilder.start(Field._ID).is(documentId).or(
-                    QueryBuilder.start(Field.OWNER).is(session.getString("userId")).get(),
-                    QueryBuilder.start("shared").elemMatch(
-                            new QueryBuilder().or(groups.toArray(new DBObject[groups.size()])).get()).get(),
-                    QueryBuilder.start("inheritedShares").elemMatch(
-                            new QueryBuilder().or(groups.toArray(new DBObject[groups.size()])).get()).get()
+            Bson query = Filters.and(
+                    Filters.eq(Field._ID, documentId),
+                    Filters.or(
+                            Filters.eq(Field.OWNER, session.getString("userId")),
+                            Filters.elemMatch("shared", Filters.or(groups.toArray(new Bson[0]))),
+                            Filters.elemMatch("inheritedShares", Filters.or(groups.toArray(new Bson[0])))
+                    )
             );
 
             MongoDb.getInstance().count(Field.DOCUMENTS, MongoQueryBuilder.build(query),
