@@ -24,6 +24,7 @@ public class Field {
     public static final String VERSION = "Version";
     public static final String LASTMODIFIEDTIME = "LastModifiedTime";
     public static final String MODIFIED = "modified";
+    public static final String FILE_DATE = "fileDate";
     public static final String DATE = "date";
     public static final String USERCANWRITE = "UserCanWrite";
     public static final String TOKEN = "token";

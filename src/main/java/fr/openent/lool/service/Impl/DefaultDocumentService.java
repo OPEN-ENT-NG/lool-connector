@@ -104,7 +104,8 @@ public class DefaultDocumentService implements DocumentService {
             }
         }));
 
-        JsonObject updaterDocument = updater.put(Field.MODIFIED, MongoDb.formatDate(new Date()));
+        final String now = MongoDb.formatDate(new Date());
+        JsonObject updaterDocument = updater.put(Field.MODIFIED, now).put(Field.FILE_DATE, now);
 
         MongoDb.getInstance().update(Field.DOCUMENTS, matcher, new JsonObject().put(Field.$SET, updaterDocument), PromiseHelper.getPromiseHandler(documentPromise));
 
