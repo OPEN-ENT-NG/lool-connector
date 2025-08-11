@@ -1,8 +1,8 @@
-# À propos de Connecteur WOPI pour LOOL
+# À propos de Connecteur WOPI pour LOOL et OnlyOffice
 * Licence : [AGPL v3](http://www.gnu.org/licenses/agpl.txt) - Copyright Région Nouvelle Aquitaine
-* Développeur(s) : CGI
+* Développeur(s) : CGI, Edifice
 * Financeur(s) : Région Nouvelle Aquitaine
-* Description : Module permettant de se connecter à Lool.
+* Description : Module permettant de se connecter à Lool ou OnlyOffice.
 
 ## Présentation du module
 Cet outil permet de créer, modifier des documents de type texte, classeur et présentation. Plusieurs personnes peuvent intervenir sur un même document en simultané. L’accès à l’outil peut aussi se faire à partir de l’espace documentaire (Documents).
