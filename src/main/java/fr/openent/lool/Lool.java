@@ -11,6 +11,7 @@ import fr.openent.lool.provider.Wopi;
 import fr.openent.lool.provider.WopiProvider;
 import fr.openent.lool.provider.WopiProviderFactory;
 import fr.openent.lool.provider.WopisProviders;
+import io.vertx.core.Future;
 import io.vertx.core.Promise;
 import io.vertx.core.eventbus.EventBus;
 import io.vertx.core.json.JsonObject;
@@ -18,6 +19,7 @@ import org.entcore.common.http.BaseServer;
 import org.entcore.common.storage.Storage;
 import org.entcore.common.storage.StorageFactory;
 
+import java.net.MalformedURLException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -28,8 +30,13 @@ public class Lool extends BaseServer {
 
     @Override
     public void start(Promise<Void> startPromise) throws Exception {
-        super.start(startPromise);
-
+      final Promise<Void> promise = Promise.promise();
+      super.start(promise);
+      promise.future()
+        .compose(e -> initLool())
+        .onComplete(startPromise);
+    }
+    public Future<Void> initLool() {
         final JsonObject wopi = config.getJsonObject("wopi", new JsonObject());
         final List<Wopi> wopiDiscover = new ArrayList<>();
 
@@ -42,12 +49,12 @@ public class Lool extends BaseServer {
                 try {
                     wopiConfig = WopiConfig.from(providers.getJsonObject(providerId));
                     provider = WopiProviderFactory.provider(wopiConfig.type(), wopiConfig.server());
-                } catch (NullPointerException e) {
-                    throw new InvalidWopiServerException(e);
+                } catch (NullPointerException | MalformedURLException e) {
+                    return Future.failedFuture(new InvalidWopiServerException(e));
                 }
 
                 if (Objects.isNull(provider)) {
-                    throw new InvalidWopiProviderException();
+                  return Future.failedFuture(new InvalidWopiProviderException());
                 }
 
                 final Wopi wopiService = new Wopi(provider, wopiConfig, new WopiHelper(vertx,wopiConfig.server(), wopiConfig.type(),providerId), providerId);
@@ -68,12 +75,12 @@ public class Lool extends BaseServer {
             try {
                 wopiConfig = WopiConfig.from(wopi);
                 provider = WopiProviderFactory.provider(wopiConfig.type(), wopiConfig.server());
-            } catch (NullPointerException e) {
-                throw new InvalidWopiServerException(e);
+            } catch (NullPointerException | MalformedURLException e) {
+              return Future.failedFuture(new InvalidWopiServerException(e));
             }
 
             if (Objects.isNull(provider)) {
-                throw new InvalidWopiProviderException();
+              return Future.failedFuture(new InvalidWopiProviderException());
             }
 
             final Wopi wopiService = new Wopi(provider, wopiConfig, new WopiHelper(vertx, wopiConfig.server(), wopiConfig.type(), providerId), providerId);
@@ -82,20 +89,21 @@ public class Lool extends BaseServer {
             wopiDiscover.add(wopiService);
         }
 
-        EventBus eb = vertx.eventBus();
-        Storage storage = new StorageFactory(vertx, config).getStorage();
-        LoolController loolController = new LoolController(eb, storage);
-        addController(loolController);
-        addController(new WopiController(eb, storage));
-        addController(new MonitoringController());
+        return StorageFactory.build(vertx, config)
+          .map(storageFactory -> {
+            final Storage storage = storageFactory.getStorage();
+            final EventBus eb = vertx.eventBus();
+            LoolController loolController = new LoolController(eb, storage);
+            addController(loolController);
+            addController(new WopiController(eb, storage));
+            addController(new MonitoringController());
 
-        startPromise.tryComplete();
-        startPromise.tryFail("[LOOL@Lool::start] Fail to start Lool");
-
-        for (Wopi wp : wopiDiscover) {
-            vertx.setTimer(WAITING_TIME, aLong -> wp.helper().discover(wp, status -> log.info(wp.config().type().name() + " discover " + wp.id() + (Boolean.TRUE.equals(status) ? " OK" : " KO"))));
-        }
-        vertx.setTimer(WAITING_TIME, timer -> WopisProviders.getFistProvider().helper().clearTokens(status -> log.info("Libre Office Online clear token " + (status.isRight() ? "OK" : "KO"))));
-        vertx.setTimer(WAITING_TIME, timer -> loolController.cleanDocumentsToken(status -> log.info("Libre Office Online document tokens " + (Boolean.TRUE.equals(status) ? "OK" : "KO"))));
+            for (Wopi wp : wopiDiscover) {
+              vertx.setTimer(WAITING_TIME, aLong -> wp.helper().discover(wp, status -> log.info(wp.config().type().name() + " discover " + wp.id() + (Boolean.TRUE.equals(status) ? " OK" : " KO"))));
+            }
+            vertx.setTimer(WAITING_TIME, timer -> WopisProviders.getFistProvider().helper().clearTokens(status -> log.info("Libre Office Online clear token " + (status.isRight() ? "OK" : "KO"))));
+            vertx.setTimer(WAITING_TIME, timer -> loolController.cleanDocumentsToken(status -> log.info("Libre Office Online document tokens " + (Boolean.TRUE.equals(status) ? "OK" : "KO"))));
+            return null;
+          });
     }
 }
