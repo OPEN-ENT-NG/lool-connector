@@ -38,6 +38,9 @@ public class Field {
     public static final String XLSX = "xlsx";
     public static final String DOCX = "docx";
 
+    // LOOL parameters
+    public static final String PROTECTED = "protected";
+
     //LibreOffice extension
     public static final String ODP = "odp";
     public static final String ODT = "odt";
