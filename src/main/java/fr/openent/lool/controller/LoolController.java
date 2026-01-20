@@ -275,6 +275,9 @@ public class LoolController extends ControllerHelper {
             String filePath = path + "template." + type;
             String filename = request.getParam(Field.NAME) + "." + type;
             String folder = request.getParam("folder");
+            // Get protected parameter (default: false for backward compatibility)
+            boolean isProtected = request.params().contains(Field.PROTECTED) &&
+                    "true".equals(request.getParam(Field.PROTECTED));
             String contentType = getContentType(type, filePath);
 
             if (contentType == null) {
@@ -293,7 +296,7 @@ public class LoolController extends ControllerHelper {
                             return;
                         }
                         JsonObject file = either.right().getValue();
-                        this.workspaceHelper.addDocument(file, user, filename, "media-library", false, new JsonArray(), handlerToAsyncHandler(message -> {
+                        this.workspaceHelper.addDocument(file, user, filename, "media-library", isProtected, new JsonArray(), handlerToAsyncHandler(message -> {
                             if (Field.OK.equals(message.body().getString(Field.STATUS))) {
                                 String documentId = message.body().getString(Field._ID);
                                 if (folder != null) {
