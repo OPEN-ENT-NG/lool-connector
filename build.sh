@@ -1,32 +1,21 @@
 #!/bin/bash
-MVN_OPTS="-Duser.home=/var/maven"
 
-if [ ! -e node_modules ]
-then
-  mkdir node_modules
-fi
+# Frontend
+cd frontend
+./build.sh --no-docker clean init build
+cd ..
 
-case `uname -s` in
-  MINGW*)
-    USER_UID=1000
-    GROUP_UID=1000
-    ;;
-  *)
-    if [ -z ${USER_UID:+x} ]
-    then
-      USER_UID=`id -u`
-      GROUP_GID=`id -g`
-    fi
-esac
+# Create directory structure and copy frontend dist
+cd backend
+find ./src/main/resources/public/ -maxdepth 1 -type f -exec rm -f {} +
 
 init(){
   me=`id -u`:`id -g`
   echo "DEFAULT_DOCKER_USER=$me" > .env
 }
 
-clean () {
-  docker compose run --rm maven mvn $MVN_OPTS clean
-}
+# Build backend
+./build.sh --no-docker clean build
 
 buildNode () {
   case `uname -s` in
