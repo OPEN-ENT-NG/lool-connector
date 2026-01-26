@@ -38,6 +38,26 @@ buildNode () {
   esac
 }
 
+buildReact () {
+  echo "Building React frontend..."
+  cd frontend
+  case `uname -s` in
+    MINGW*)
+      docker-compose run --rm -u "$USER_UID:$GROUP_GID" node sh -c "pnpm install --no-bin-links && pnpm build"
+      ;;
+    *)
+      docker-compose run --rm -u "$USER_UID:$GROUP_GID" node sh -c "pnpm install && pnpm build"
+  esac
+  cd ..
+  
+  # Copy React build to public directory (only JS and CSS, not HTML)
+  echo "Copying React build to public directory..."
+  mkdir -p src/main/resources/public/dist-home
+  cp frontend/dist-home/*.js src/main/resources/public/dist-home/ 2>/dev/null || true
+  cp frontend/dist-home/*.css src/main/resources/public/dist-home/ 2>/dev/null || true
+  echo "React build completed and copied successfully"
+}
+
 install () {
   docker compose run --rm maven mvn $MVN_OPTS install -DskipTests
 }
@@ -106,11 +126,14 @@ do
     buildNode)
       buildNode
       ;;
+    buildReact)
+      buildReact
+      ;;
     buildMaven)
       install
       ;;
     install)
-      buildNode && install
+      buildNode && buildReact && install
       ;;
     publish)
       publish

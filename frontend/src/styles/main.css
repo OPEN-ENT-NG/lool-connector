@@ -1,0 +1,20 @@
+.container-fluid {
+    max-width: 100%;
+}
+
+.home-creation-container {
+    max-width: 870px;
+    width: 100%;
+    margin: 0 auto;
+}
+
+/* Override grid columns to 12 for tablet consistency */
+@media (min-width: 768px) {
+    .home-creation-container .grid {
+        --edifice-columns: 12;
+    }
+}
+
+.home-creation-svg {
+    max-width: 400px;
+}

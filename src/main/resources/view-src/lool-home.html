@@ -4,16 +4,14 @@
         <title>{{#i18n}}lool.title{{/i18n}}</title>
         <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
         <meta name="viewport" content="initial-scale=1, maximum-scale=1">
-        
-        <script src="/assets/js/entcore/ng-app.js?v=@@VERSION" id="context" type="text/javascript"></script>
-        <script type="text/javascript" src="/lool/public/dist/application.js?v=@@VERSION"></script>
-        
-        <script type="text/ng-template" id="empty"></script>
+        <link id="favicon" rel="icon" type="image/x-icon" href="/assets/themes/edifice-bootstrap/img/illustrations/favicon.ico" />
     </head>
 
-    <body ng-controller="MainController" class="lool">
-        <portal>
-            <container template="main"></container>
-        </portal>
+    <body class="lool">
+    <div id="root"></div>
+    <div id="portal"></div>
+        
+        <!-- React application bundle -->
+        <script type="module" src="/lool/public/home.js?v=@@VERSION"></script>
     </body>
 </html>
