@@ -18,10 +18,10 @@
     "typecheck": "tsc -b --noEmit"
   },
   "dependencies": {
-    "@edifice.io/utilities": "develop",
     "@edifice.io/bootstrap": "develop",
     "@edifice.io/client": "develop",
     "@edifice.io/react": "develop",
+    "@edifice.io/utilities": "develop",
     "@tanstack/react-query": "5.81.5",
     "clsx": "2.1.1",
     "i18next": "23.8.1",
@@ -32,6 +32,7 @@
     "react-error-boundary": "4.0.13",
     "react-hook-form": "7.62.0",
     "react-i18next": "14.1.0",
+    "react-router-dom": "^7.13.0",
     "zustand": "4.5.7"
   },
   "resolutions": {

@@ -1,7 +1,7 @@
 import { create } from "zustand";
 
 interface DocumentType {
-  id: string;
+  id: "word" | "powerpoint" | "excel";
   extension: string;
   label: string;
 }

@@ -74,6 +74,13 @@ public class LoolController extends ControllerHelper {
         renderView(request, new JsonObject(), "lool-home.html", null);
     }
 
+    @Get("/modal/create")
+    @ApiDoc("Render document creation modal")
+    @SecuredAction(value = "", type = ActionType.AUTHENTICATED)
+    public void renderCreateModal(HttpServerRequest request) {
+        renderView(request, new JsonObject(), "lool-home.html", null);
+    }
+
     @Get("/config")
     @SecuredAction(value = "", type = ActionType.RESOURCE)
     @ResourceFilter(AdminFilter.class)
