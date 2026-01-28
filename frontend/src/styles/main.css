@@ -13,8 +13,18 @@
     .home-creation-container .grid {
         --edifice-columns: 12;
     }
+    
+    .lool-create-modal .grid {
+        --edifice-columns: 12;
+    }
 }
 
 .home-creation-svg {
     max-width: 400px;
+}
+
+/* Radio button primary color (scoped to create modal) */
+.lool-create-modal .form-check-input:checked {
+    background-color: var(--edifice-primary);
+    border-color: var(--edifice-primary);
 }

@@ -185,7 +185,7 @@ export const HomeCreation = () => {
             <Button
               leftIcon={<IconAdd></IconAdd>}
               onClick={() => {
-                window.location.href = "/workspace/workspace#lool";
+                window.location.href = "/workspace/workspace#/lool";
               }}
             >
               {t("lool.create.from.workspace")}
