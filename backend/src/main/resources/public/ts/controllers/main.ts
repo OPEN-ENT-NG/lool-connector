@@ -71,7 +71,7 @@ export const mainController = ng.controller('MainController', ['$scope', 'route'
             } else {
                 http.delete(url);
             }
-            window.close();
+            //window.close();
         };
 
         $scope.UI_FileVersions = async () => {
