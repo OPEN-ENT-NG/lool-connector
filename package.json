@@ -1,6 +1,6 @@
 {
   "name": "lool",
-  "version": "2.1.1",
+  "version": "2.1.1-dev.0",
   "description": "Libre Office Online connector",
   "main": "gulpfile.js",
   "scripts": {
@@ -16,7 +16,7 @@
     "ts-loader": "^3.3.0",
     "axios": "0.16.2",
     "core-js": "2.4.1",
-    "entcore": "4.8.14",
+    "entcore": "dev",
     "entcore-toolkit": "^1.0.1",
     "apexcharts": "^3.1.0",
     "gulp": "3.9.1",
