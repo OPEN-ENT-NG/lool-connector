@@ -1,28 +1,36 @@
 import i18n from "i18next";
+import Backend from "i18next-http-backend";
 import { initReactI18next } from "react-i18next";
-import HttpBackend from "i18next-http-backend";
 
 i18n
-  .use(HttpBackend)
+  .use(Backend)
   .use(initReactI18next)
   .init({
-    lng: "fr",
-    fallbackLng: "fr",
-    debug: false,
-    interpolation: {
-      escapeValue: false,
-    },
     backend: {
-      loadPath: "/lool/i18n",
-      parse: (data: string) => {
-        try {
-          return JSON.parse(data);
-        } catch (e) {
-          console.error("Error parsing i18n data:", e);
-          return {};
-        }
+      loadPath: (_lngs: string[], namespaces: string[]) => {
+        const urls = namespaces.map((namespace: string) => {
+          if (namespace === "common") {
+            return `/i18n`;
+          }
+          return `/${namespace}/i18n`;
+        });
+        return urls;
+      },
+      parse: function (data: string) {
+        return JSON.parse(data);
       },
     },
+    defaultNS: "common",
+    // you can add name of the app directly in the ns array
+    ns: ["common", "lool"],
+    fallbackLng: "fr",
+    lng: "fr",
+    interpolation: {
+      escapeValue: false,
+      prefix: "[[",
+      suffix: "]]",
+    },
+    debug: false,
   });
 
 export default i18n;

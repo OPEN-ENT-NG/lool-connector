@@ -37,7 +37,8 @@ pipeline {
                 dir('backend') {
                     sh 'mkdir -p ./src/main/resources/public/ || true'
                     sh 'find ./src/main/resources/public/ -maxdepth 1 -type f -exec rm -f {} +'
-                    sh 'cp -R ../frontend/dist-home/* ./src/main/resources/public/'
+                    sh 'cp -R ../frontend/dist-home/public/* ./src/main/resources/public/'
+                    sh 'cp -R ../frontend/dist-home/*.js ./src/main/resources/public/'
                     sh './build.sh init clean build publish'
                     sh 'rm -rf ../frontend/dist-home'
                 }

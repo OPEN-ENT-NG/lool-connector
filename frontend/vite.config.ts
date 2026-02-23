@@ -57,12 +57,12 @@ export default ({ mode }: { mode: string }) => {
     build: {
       outDir: "dist-home",
       emptyOutDir: true,
+      assetsDir: 'public',
       rollupOptions: {
         input: resolve(__dirname, "index.html"),
         output: {
           format: "iife",
-          entryFileNames: "home.js",
-          assetFileNames: "[name].[ext]",
+          entryFileNames: 'home.js',
           inlineDynamicImports: true,
         },
       },
