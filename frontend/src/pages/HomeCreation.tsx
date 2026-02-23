@@ -5,6 +5,7 @@ import {
   Grid,
   Button,
   Card,
+  useEdificeClient,
 } from "@edifice.io/react";
 import { IconAdd } from "@edifice.io/react/icons";
 import { useTranslation } from "react-i18next";
@@ -14,7 +15,8 @@ import { useProviderContext } from "../services/queries/lool.query";
 import { useHomeStore } from "../store/home.store";
 
 export const HomeCreation = () => {
-  const { t } = useTranslation();
+  const { appCode } = useEdificeClient();
+  const { t } = useTranslation(appCode);
   const {
     data: providerContext,
     isLoading,

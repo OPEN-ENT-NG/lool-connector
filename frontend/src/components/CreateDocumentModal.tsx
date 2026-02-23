@@ -8,6 +8,7 @@ import {
   Input,
   FormControl,
   Label,
+  useEdificeClient,
 } from "@edifice.io/react";
 import { DocumentTypeCards } from "./DocumentTypeCards";
 import { useHomeStore } from "../store/home.store";
@@ -19,7 +20,8 @@ interface CreateDocumentModalProps {
 }
 
 export const CreateDocumentModal = ({ isStandalone = false, folderId }: CreateDocumentModalProps) => {
-  const { t } = useTranslation();
+  const { appCode } = useEdificeClient();
+  const { t } = useTranslation(appCode);
   const [filename, setFilename] = useState("");
   const { selectedDocType, selectDocType, providers } = useHomeStore();
   const navigate = useNavigate();

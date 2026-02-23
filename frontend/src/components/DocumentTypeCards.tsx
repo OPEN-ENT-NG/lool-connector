@@ -1,4 +1,4 @@
-import { Grid, Card, Radio } from "@edifice.io/react";
+import { Grid, Card, Radio, useEdificeClient } from "@edifice.io/react";
 import { useTranslation } from "react-i18next";
 import clsx from "clsx";
 
@@ -13,7 +13,8 @@ export const DocumentTypeCards = ({
   onCardClick,
   showRadio = false,
 }: DocumentTypeCardsProps) => {
-  const { t } = useTranslation();
+  const { appCode } = useEdificeClient();
+  const { t } = useTranslation(appCode);
 
   const handleChange = (docTypeId: string) => {
     onCardClick(docTypeId);
