@@ -31,7 +31,7 @@ public abstract class WopiProvider {
         this.url = url;
     }
 
-    public abstract String redirectURL(HttpServerRequest request, ActionURL actionURL, JsonObject document, Wopi wopiService);
+    public abstract String redirectURL(HttpServerRequest request, ActionURL actionURL, JsonObject document, Wopi wopiService, String language);
 
     public URL url() {
         return this.url;

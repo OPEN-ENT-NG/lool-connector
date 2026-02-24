@@ -39,6 +39,7 @@ import org.entcore.common.http.filter.AdminFilter;
 import org.entcore.common.http.filter.ResourceFilter;
 import org.entcore.common.http.filter.SuperAdminFilter;
 import org.entcore.common.storage.Storage;
+import org.entcore.common.user.UserInfos;
 import org.entcore.common.user.UserUtils;
 
 import java.io.IOException;
@@ -104,7 +105,8 @@ public class LoolController extends ControllerHelper {
                     documentService.get(token.getDocument(), result -> {
                         if (result.isRight()) {
                             JsonObject document = result.right().getValue();
-                            getRedirectionUrl(request, document, wopiService, event -> {
+                            String language = getLanguage(request, user);
+                            getRedirectionUrl(request, document, wopiService,correspondsToLanguage(language),event -> {
                                 if (event.isRight()) {
                                     Timestamp ts = Timestamp.from(Instant.now());
                                     Duration d = Duration.ofHours(wopiService.config().duration_token());
@@ -136,6 +138,53 @@ public class LoolController extends ControllerHelper {
     }
 
 
+    private String getLanguage(HttpServerRequest request, UserInfos user) {
+        try {
+
+            JsonObject cacheObject =  new JsonObject(user.getCache());    
+            JsonObject preferences = cacheObject.getJsonObject("preferences");
+            
+            if (preferences != null) {
+                JsonObject languageObj =  new JsonObject(preferences.getString("language"));                
+                if (languageObj != null) {
+                    String defaultDomain = languageObj.getString("default-domain");
+                    if (defaultDomain != null) {
+                        return defaultDomain;
+                    }
+                }
+            }
+        } catch (io.vertx.core.json.DecodeException e) {
+            log.warn("Could not parse user cache for language preference: " + e.getMessage());
+            return "fr";
+        }
+
+        String language = request.getHeader("Accept-Language");
+        if(language != null) {
+            return language.split(";")[0];
+        }
+
+        return "fr";
+    }
+
+    private String correspondsToLanguage(String language) {
+        switch(language) {
+            case "fr":
+                return "fr";
+            case "en":
+                return "en";
+            case "de":
+                return "de";
+            case "it":
+                return "it";
+            case "pt":
+                return "pt";
+            case "es":
+                return "es";
+            default:
+                return "fr";
+        }
+    }
+
     /**
      * Get redirection url for Libre Office Online document
      *
@@ -143,11 +192,11 @@ public class LoolController extends ControllerHelper {
      * @param document Document
      * @param handler Function handler returning data
      */
-    private void getRedirectionUrl(HttpServerRequest request, JsonObject document, Wopi wopiService, Handler<Either<String, String>> handler) {
+    private void getRedirectionUrl(HttpServerRequest request, JsonObject document, Wopi wopiService, String language, Handler<Either<String, String>> handler) {
         wopiService.helper().getActionUrl(document.getJsonObject(Field.METADATA).getString("content-type"), null, event -> {
             if (event.isRight()) {
                 ActionURL actionURL = event.right().getValue();
-                handler.handle(new Either.Right<>(wopiService.provider().redirectURL(request, actionURL, document, wopiService)));
+                handler.handle(new Either.Right<>(wopiService.provider().redirectURL(request, actionURL, document, wopiService, language)));
             } else {
                 String message = "[LoolController@redirectToLool] Failed to redirect to Libre Office Online for document " + document.getString(Field._ID);
                 log.error(message, event.left().getValue());
