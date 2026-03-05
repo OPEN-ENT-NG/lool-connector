@@ -31,6 +31,8 @@ import io.vertx.core.eventbus.EventBus;
 import io.vertx.core.http.HttpServerRequest;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
+
+import org.apache.commons.lang3.StringUtils;
 import org.entcore.common.bus.WorkspaceHelper;
 import org.entcore.common.controller.ControllerHelper;
 import org.entcore.common.events.EventStore;
@@ -145,14 +147,16 @@ public class LoolController extends ControllerHelper {
             JsonObject preferences = cacheObject.getJsonObject("preferences");
             
             if (preferences != null) {
-                JsonObject languageObj =  new JsonObject(preferences.getString("language"));                
-                if (languageObj != null) {
-                    String defaultDomain = languageObj.getString("default-domain");
-                    if (defaultDomain != null) {
-                        return defaultDomain;
+                if (preferences.containsKey("language") && StringUtils.isNotBlank(preferences.getString("language"))) {
+                    JsonObject languageObj =  new JsonObject(preferences.getString("language"));                
+                    if (languageObj.containsKey("default-domain") && StringUtils.isNotBlank(languageObj.getString("default-domain"))) {
+                        String defaultDomain = languageObj.getString("default-domain");
+                        if (StringUtils.isNotBlank(defaultDomain)) {
+                            return defaultDomain;
+                        }
                     }
-                }
             }
+        }
         } catch (io.vertx.core.json.DecodeException e) {
             log.warn("Could not parse user cache for language preference: " + e.getMessage());
             return "fr";
