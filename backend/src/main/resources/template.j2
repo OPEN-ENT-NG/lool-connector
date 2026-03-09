@@ -36,7 +36,7 @@
           "EnableOwnerTermination": {{ loolEnableOwnerTermination|default('false') }}
         }
       },
-    {% else %}
+    {% elif(loolProviders is defined) %}
       "wopi": {
         "providers" : {{ loolProviders }},
         "mappings" : {{ loolMappings }}
