@@ -2,6 +2,10 @@
   "name": "fr.openent~lool",
   "config": {
     "main" : "fr.openent.lool.Lool",
+    "probes": [
+      "org.entcore.common.http.health.Neo4jProbe",
+      "org.entcore.common.http.health.MongoProbe"
+    ],
     "port" : 8333,
     "app-name" : "Lool",
     "app-address" : "/lool",
