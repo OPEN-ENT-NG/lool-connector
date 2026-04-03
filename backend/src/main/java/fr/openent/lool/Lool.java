@@ -34,6 +34,7 @@ public class Lool extends BaseServer {
       super.start(promise);
       promise.future()
         .compose(e -> initLool())
+        .onFailure(e -> log.error("An error occurred while deploying lool", e))
         .onComplete(startPromise);
     }
     public Future<Void> initLool() {
