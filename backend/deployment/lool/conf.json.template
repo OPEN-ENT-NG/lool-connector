@@ -34,6 +34,31 @@
                 "HidePrintOption": false,
                 "UserCanNotWriteRelative": true,
                 "EnableOwnerTermination": false
+            },
+            "onlyoffice": {
+                "editorConfig": {
+                    "customization": {
+                        "compactHeader": true,
+                        "compactToolbar": true,
+                        "hideRulers": true,
+                        "hideRightMenu": true,
+                        "statusBar": false,
+                        "plugins": false,
+                        "layout": {
+                            "statusBar": false,
+                            "toolbar": {
+                                "home": true,
+                                "insert": true,
+                                "draw": true,
+                                "layout": true,
+                                "references": true,
+                                "collaboration": false,
+                                "protection": false,
+                                "view": true
+                            }
+                        }
+                    }
+                }
             }
         }
       }
