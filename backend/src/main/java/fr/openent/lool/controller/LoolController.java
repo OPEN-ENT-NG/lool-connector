@@ -8,6 +8,7 @@ import fr.openent.lool.core.constants.Field;
 import fr.openent.lool.helper.TraceHelper;
 import fr.openent.lool.helper.WopiHelper;
 import fr.openent.lool.provider.Wopi;
+import fr.openent.lool.provider.WopiProviders;
 import fr.openent.lool.provider.WopisProviders;
 import fr.openent.lool.service.DocumentService;
 import fr.openent.lool.service.FileService;
@@ -113,6 +114,14 @@ public class LoolController extends ControllerHelper {
                                     Timestamp ts = Timestamp.from(Instant.now());
                                     Duration d = Duration.ofHours(wopiService.config().duration_token());
                                     long duration_token = d.toMillis();
+                                    // Build docs_api_config JSON for OnlyOffice editor customization
+                                    String docsApiConfig = "";
+                                    if (WopiProviders.OnlyOffice.equals(wopiService.provider().type())) {
+                                        JsonObject onlyofficeConfig = wopiService.config().onlyofficeConfig();
+                                        if (!onlyofficeConfig.isEmpty()) {
+                                            docsApiConfig = onlyofficeConfig.encode();
+                                        }
+                                    }
                                     JsonObject params = new JsonObject()
                                             .put("redirection", event.right().getValue())
                                             .put("document-id", token.getDocument())
@@ -120,7 +129,8 @@ public class LoolController extends ControllerHelper {
                                             .put("server", wopiService.config().server().toString())
                                             .put("resync", request.params().contains("resync") ? request.getParam("resync") : false)
                                             .put("provider-name",wopiService.provider().type())
-                                            .put("duration-token",duration_token + ts.getTime());
+                                            .put("duration-token",duration_token + ts.getTime())
+                                            .put("docs-api-config", docsApiConfig);
                                     renderView(request, params, "doc.html", null);
                                     eventStore.createAndStoreEvent(Actions.ACCESS.name(), request);
                                     TraceHelper.add(Actions.ACCESS.name(), token.getUser(), token.getDocument(), TraceHelper.getFileExtension(document.getString(Field.NAME)));

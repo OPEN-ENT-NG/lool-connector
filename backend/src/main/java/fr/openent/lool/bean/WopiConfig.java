@@ -16,6 +16,7 @@ public class WopiConfig {
     private final WopiProviders type;
     private final URL server;
     private final Map<String, Object> serverCapabilities;
+    private final JsonObject onlyofficeConfig;
     private final List<String> templates;
     private final Long duration_token;
 
@@ -24,6 +25,7 @@ public class WopiConfig {
         this.type = WopiProviders.valueOf(provider.getString("type", null));
         this.server = new URL(provider.getString("url", null));
         this.serverCapabilities = wopiConfig.getJsonObject("server_capabilities", new JsonObject()).getMap();
+        this.onlyofficeConfig = wopiConfig.getJsonObject("onlyoffice", new JsonObject());
         List<String> defaultTemplates = this.type.equals(OnlyOffice) ? Arrays.asList(Field.DOCX, Field.PPTX, Field.XLSX) :
                 Arrays.asList(Field.ODT, Field.ODP, Field.ODS);
         this.templates = wopiConfig.containsKey("templates") ? wopiConfig.getJsonArray("templates").getList() : defaultTemplates;
@@ -48,6 +50,10 @@ public class WopiConfig {
 
     public Map<String, Object> serverCapabilities() {
         return this.serverCapabilities;
+    }
+
+    public JsonObject onlyofficeConfig() {
+        return this.onlyofficeConfig;
     }
 
     public static WopiConfig from(JsonObject wopiConfig) throws MalformedURLException {
