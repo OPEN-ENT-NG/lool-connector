@@ -38,6 +38,31 @@
           "HidePrintOption": {{ loolHidePrintOption|default('false') }},
           "UserCanNotWriteRelative": {{ loolUserCanNotWriteRelative|default('true') }},
           "EnableOwnerTermination": {{ loolEnableOwnerTermination|default('false') }}
+        },
+        "onlyoffice": {
+          "editorConfig": {
+            "customization": {
+              "compactHeader": {{ loolOnlyofficeCompactHeader|default('true') }},
+              "compactToolbar": {{ loolOnlyofficeCompactToolbar|default('true') }},
+              "hideRulers": {{ loolOnlyofficeHideRulers|default('true') }},
+              "hideRightMenu": {{ loolOnlyofficeHideRightMenu|default('true') }},
+              "statusBar": {{ loolOnlyofficeStatusBar|default('false') }},
+              "plugins": {{ loolOnlyofficePlugins|default('false') }},
+              "layout": {
+                "statusBar": {{ loolOnlyofficeLayoutStatusBar|default('false') }},
+                "toolbar": {
+                    "home": {{ loolOnlyofficeToolbarHome|default('true') }},
+                    "insert": {{ loolOnlyofficeToolbarInsert|default('true') }},
+                    "draw": {{ loolOnlyofficeToolbarDraw|default('true') }},
+                    "layout": {{ loolOnlyofficeToolbarLayout|default('true') }},
+                    "references": {{ loolOnlyofficeToolbarReferences|default('true') }},
+                    "collaboration": {{ loolOnlyofficeToolbarCollaboration|default('false') }},
+                    "protection": {{ loolOnlyofficeToolbarProtection|default('false') }},
+                    "view": {{ loolOnlyofficeToolbarView|default('true') }}
+                }
+              }
+            }
+          }
         }
       },
     {% elif(loolProviders is defined) %}
