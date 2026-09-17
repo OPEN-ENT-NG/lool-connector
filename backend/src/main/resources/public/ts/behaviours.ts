@@ -1,4 +1,4 @@
-import http from 'axios';
+import { http } from 'entcore-toolkit';
 import {Behaviours} from 'entcore';
 import {capabilities, create, initPostMessage} from './sniplets/create';
 import {Metadata} from "./providers/Provider";
