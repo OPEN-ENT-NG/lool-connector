@@ -1,5 +1,11 @@
-import axios from 'axios';
-import MockAdapter from "axios-mock-adapter";
+jest.mock('entcore-toolkit', () => Object.assign(
+    {},
+    (jest as any).requireActual('entcore-toolkit'),
+    {http: {get: jest.fn(), post: jest.fn(), put: jest.fn(), delete: jest.fn(), postFile: jest.fn(), putFile: jest.fn()}}
+));
+
+import {http} from 'entcore-toolkit';
+import {mockHttpResponse} from '../../test-utils/httpMock';
 import {DocumentList, DocumentListItem} from "../DocumentList";
 
 
@@ -8,9 +14,8 @@ describe('DocumentList', () => {
     const documentList = new DocumentList();
     documentList.data = [documentListItem]
     test('returns data when retrieve is correctly called', done => {
-        const mock = new MockAdapter(axios);
         const data = {"_id": "id", "filename": "red", "users": 1};
-        mock.onGet('/lool/monitoring/documents').reply(200, data);
+        (http.get as jest.Mock).mockResolvedValueOnce(mockHttpResponse(data));
         documentList.sync().then(() => {
             expect(documentList.data).toEqual(data);
             done();
@@ -18,9 +23,9 @@ describe('DocumentList', () => {
     });
 
     test('returns data when retrieve is correctly called other method', done => {
-        let spy = jest.spyOn(axios, "get");
+        (http.get as jest.Mock).mockResolvedValueOnce(mockHttpResponse([documentListItem]));
         documentList.sync().then(() => {
-            expect(spy).toHaveBeenCalledWith("/lool/monitoring/documents");
+            expect(http.get).toHaveBeenCalledWith("/lool/monitoring/documents");
             done();
         })
     })

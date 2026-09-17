@@ -1,14 +1,19 @@
-import axios from 'axios';
-import MockAdapter from "axios-mock-adapter";
+jest.mock('entcore-toolkit', () => Object.assign(
+    {},
+    (jest as any).requireActual('entcore-toolkit'),
+    {http: {get: jest.fn(), post: jest.fn(), put: jest.fn(), delete: jest.fn(), postFile: jest.fn(), putFile: jest.fn()}}
+));
+
+import {http} from 'entcore-toolkit';
+import {mockHttpResponse} from '../../test-utils/httpMock';
 import {EventCounter} from "../EventCounter";
 
 
 describe('DocumentList', () => {
     const eventCounter = new EventCounter('version');
     test('returns data of event when retrieve is correctly called', done => {
-        const mock = new MockAdapter(axios);
-        const data = 1
-        mock.onGet(`/lool/monitoring/events/${eventCounter.eventName}/count`).reply(200, data);
+        const data = 1;
+        (http.get as jest.Mock).mockResolvedValueOnce(mockHttpResponse(data));
         eventCounter.sync().then(() => {
             eventCounter.data = 1;
             expect(eventCounter.data).toEqual(data);
@@ -17,9 +22,9 @@ describe('DocumentList', () => {
     });
 
     test('returns data of event when retrieve is correctly called other method', done => {
-        let spy = jest.spyOn(axios, "get");
+        (http.get as jest.Mock).mockResolvedValueOnce(mockHttpResponse(1));
         eventCounter.sync().then(() => {
-            expect(spy).toHaveBeenCalledWith(`/lool/monitoring/events/${eventCounter.eventName}/count`);
+            expect(http.get).toHaveBeenCalledWith(`/lool/monitoring/events/${eventCounter.eventName}/count`);
             done();
         })
     })
