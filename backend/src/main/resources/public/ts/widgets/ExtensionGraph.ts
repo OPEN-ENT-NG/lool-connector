@@ -1,5 +1,5 @@
 import {idiom} from "entcore";
-import http from 'axios';
+import { http } from 'entcore-toolkit';
 import {AsyncWidget} from './AsyncWidget';
 
 export interface GraphItem {

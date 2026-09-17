@@ -1,5 +1,5 @@
 import {angular, Behaviours, moment, ng, template, idiom, workspace} from 'entcore';
-import http from "axios";
+import { http } from "entcore-toolkit";
 import {safeApply} from "../utils/safe-apply.utils";
 
 declare let window: any;
