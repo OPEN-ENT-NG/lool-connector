@@ -1,6 +1,6 @@
 {
   "name": "@edifice.io/lool",
-  "version": "2.2.7-dev.0",
+  "version": "2.2.6-develop-pedago.0",
   "private": true,
   "license": "AGPL-3.0",
   "author": "Edifice",
@@ -18,10 +18,10 @@
     "typecheck": "tsc -b --noEmit"
   },
   "dependencies": {
-    "@edifice.io/bootstrap": "2.6.3",
-    "@edifice.io/client": "2.6.3",
-    "@edifice.io/react": "2.6.3",
-    "@edifice.io/utilities": "2.6.3",
+    "@edifice.io/bootstrap": "develop-pedago",
+    "@edifice.io/client": "develop-pedago",
+    "@edifice.io/react": "develop-pedago",
+    "@edifice.io/utilities": "develop-pedago",
     "@tanstack/react-query": "5.81.5",
     "clsx": "2.1.1",
     "i18next": "23.8.1",
